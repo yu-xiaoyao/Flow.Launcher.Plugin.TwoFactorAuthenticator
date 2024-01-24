@@ -1,0 +1,12 @@
+{
+    "ID": "789B27F3EB8B42D5B6EFB6EF7DFD2BE1",
+    "ActionKeyword": "2fa",
+    "Name": "TwoFactorAuthenticator",
+    "Description": "a new plugin for Flow",
+    "Author": "yu-xiaoyao",
+    "Version": "1.0.0",
+    "Language": "csharp",
+    "Website": "https://github.com/yu-xiaoyao/Flow.Launcher.Plugin.TwoFactorAuthenticator",
+    "IcoPath": "Images\\TwoFactorAuthenticatorIcon.png",
+    "ExecuteFileName": "Flow.Launcher.Plugin.TwoFactorAuthenticator.dll"
+}

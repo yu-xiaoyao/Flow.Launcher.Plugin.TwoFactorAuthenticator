@@ -12,18 +12,22 @@
             <StackPanel Orientation="Vertical">
                 <StackPanel Orientation="Horizontal" Margin="10">
                     <Button Margin="4" Click="Totp_Add_Click">Add TOTP</Button>
-                    <Button Margin="4">Save Settings</Button>
+                    <Button Margin="4" Click="Save_Settings">Save Settings</Button>
                 </StackPanel>
 
-                <StackPanel Margin="10 0 10 10" Height="200">
-                    <Grid Height="200">
-                        <DataGrid x:Name="TotpDataGrid" Height="200"
+                <StackPanel Margin="10 0 10 10" Height="180">
+                    <Grid Height="180">
+                        <DataGrid x:Name="TotpDataGrid" Height="180"
                                   AutoGenerateColumns="False"
                                   HorizontalScrollBarVisibility="Auto"
                                   VerticalScrollBarVisibility="Auto"
+                                  Background="DarkGray"
+                                  MouseDoubleClick="DataGrid_Mouse_Double_Click"
+                                  MouseRightButtonDown="DataGrid_Mouse_Right_Button_Down"
                                   CanUserAddRows="False">
 
                             <DataGrid.Columns>
+                                <DataGridTextColumn Header="Name" Width="2*" Binding="{Binding Name}" />
                                 <DataGridTextColumn Header="Issuer" Width="3*" Binding="{Binding Issuer}" />
                                 <DataGridTextColumn Header="AccountTitle" Width="3*" Binding="{Binding AccountTitle}" />
                                 <DataGridTextColumn Header="Secret" Width="3*" Binding="{Binding Secret}" />

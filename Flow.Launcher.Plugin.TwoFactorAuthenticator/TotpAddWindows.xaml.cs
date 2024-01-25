@@ -1,15 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
+using System.Reflection;
 using System.Windows;
 using System.Windows.Input;
 using Google.Authenticator;
 using JetBrains.Annotations;
 using Microsoft.Win32;
+using ZXing;
 
 namespace Flow.Launcher.Plugin.TwoFactorAuthenticator;
 
-public delegate void OnTotpAdd(TotpModel model);
+public delegate void OnTotpAdd(TotpModel model, int index);
 
 /// <summary>
 /// TotpAddWindows.xaml 的交互逻辑
@@ -17,18 +20,22 @@ public delegate void OnTotpAdd(TotpModel model);
 public partial class TotpAddWindows : Window
 {
     [CanBeNull] private readonly OnTotpAdd _totpAdd;
+    private readonly int _index;
+    [CanBeNull] private readonly TotpModel _oldData;
 
-    public TotpAddWindows([CanBeNull] OnTotpAdd totpAdd, [CanBeNull] TotpModel oldData = null)
+    public TotpAddWindows([CanBeNull] OnTotpAdd totpAdd, [CanBeNull] TotpModel oldData = null, int index = -1)
     {
         _totpAdd = totpAdd;
+        _oldData = oldData;
+        _index = index;
         InitializeComponent();
 
         KeyDown += Esc_Exit_KeyDown;
 
-        InitComboBoxData();
+        InitData();
     }
 
-    private void InitComboBoxData()
+    private void InitData()
     {
         var allAlgorithms = OtpAuthUtil.GetAllAlgorithms();
         var result = new List<string>();
@@ -38,7 +45,24 @@ public partial class TotpAddWindows : Window
         foreach (var item in result)
             ComboBoxAlgorithm.Items.Add(item);
 
-        ComboBoxAlgorithm.SelectedIndex = result.Count - 1;
+
+        var cbIndex = result.Count - 1;
+        if (_oldData != null)
+        {
+            // update 
+            TextBoxName.Text = _oldData.Name ?? "";
+            TextBoxSecret.Text = _oldData.Secret;
+            TextBoxIssuer.Text = _oldData.Issuer;
+            TextBoxAccount.Text = _oldData.AccountTitle ?? "";
+
+            if (!string.IsNullOrEmpty(_oldData.Algorithm))
+            {
+                cbIndex = (int)OtpAuthUtil.ResolveHashTypeAlgorithm(_oldData.Algorithm);
+            }
+        }
+
+
+        ComboBoxAlgorithm.SelectedIndex = cbIndex;
     }
 
     private void Esc_Exit_KeyDown(object sender, KeyEventArgs e)
@@ -47,6 +71,34 @@ public partial class TotpAddWindows : Window
         {
             Close();
         }
+    }
+
+    private void ImportClipboard_Click(object sender, RoutedEventArgs e)
+    {
+        string result = null;
+        if (Clipboard.ContainsImage())
+        {
+            var bitmap = QrCodeUtil.GetBitmap(Clipboard.GetImage());
+            if (bitmap != null)
+            {
+                result = QrCodeUtil.ResolveQrCode(bitmap);
+            }
+        }
+        else if (Clipboard.ContainsText(TextDataFormat.Text))
+        {
+            result = Clipboard.GetText(TextDataFormat.Text);
+        }
+
+        if (result == null) return;
+
+        var otpUrl = OtpAuthUtil.ResolveOtpUrl(result);
+
+        if (otpUrl is not TotpModel totp)
+        {
+            return;
+        }
+
+        SetDataView(totp);
     }
 
     private void ImportQrCodeBtn_Click(object sender, RoutedEventArgs e)
@@ -88,6 +140,11 @@ public partial class TotpAddWindows : Window
             return;
         }
 
+        SetDataView(totp);
+    }
+
+    private void SetDataView(TotpModel totp)
+    {
         if (totp.Algorithm != null)
         {
             HashType hashType;
@@ -142,12 +199,13 @@ public partial class TotpAddWindows : Window
         var model = new TotpModel
         {
             Type = OtpAuthUtil.TotpType,
+            Name = TextBoxName.Text.Trim(),
             Secret = secret,
             Issuer = issuer,
             AccountTitle = account,
             Algorithm = algorithm
         };
-        _totpAdd?.Invoke(model);
+        _totpAdd?.Invoke(model, _index);
         Close();
     }
 

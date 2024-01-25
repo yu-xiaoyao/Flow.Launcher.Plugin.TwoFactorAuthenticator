@@ -36,12 +36,21 @@ namespace Flow.Launcher.Plugin.TwoFactorAuthenticator
             {
                 if (!isNullSearch)
                 {
-                    if (!otp.Name.Contains(search, StringComparison.OrdinalIgnoreCase))
+                    if (otp.Name == null || !otp.Name.Contains(search, StringComparison.OrdinalIgnoreCase))
                         continue;
                 }
 
                 if (otp is TotpModel totp)
                 {
+                    if (!isNullSearch)
+                    {
+                        if (!totp.Issuer.Contains(search, StringComparison.OrdinalIgnoreCase))
+                            continue;
+
+                        if (!totp.AccountTitle.Contains(search, StringComparison.OrdinalIgnoreCase))
+                            continue;
+                    }
+
                     result.Add(new Result
                     {
                         Title = totp.Issuer, SubTitle = totp.AccountTitle, IcoPath = IconPath, ContextData = totp,

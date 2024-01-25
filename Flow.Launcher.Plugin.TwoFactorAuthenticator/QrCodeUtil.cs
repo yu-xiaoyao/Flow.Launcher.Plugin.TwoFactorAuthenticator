@@ -1,10 +1,14 @@
 ﻿using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
+using System.Windows;
+using System.Windows.Media.Imaging;
 using JetBrains.Annotations;
 using ZXing;
 using ZXing.Common;
 using ZXing.Windows.Compatibility;
+using Point = System.Drawing.Point;
 
 namespace Flow.Launcher.Plugin.TwoFactorAuthenticator;
 
@@ -36,5 +40,28 @@ public class QrCodeUtil
 
         var result = reader.Decode(bitmap);
         return result?.Text;
+    }
+
+    [CanBeNull]
+    public static Bitmap GetBitmap([CanBeNull] BitmapSource source)
+    {
+        if (source == null) return null;
+
+        var bmp = new Bitmap(
+            source.PixelWidth,
+            source.PixelHeight,
+            PixelFormat.Format32bppPArgb);
+
+        var data = bmp.LockBits(
+            new Rectangle(Point.Empty, bmp.Size),
+            ImageLockMode.WriteOnly,
+            PixelFormat.Format32bppPArgb);
+        source.CopyPixels(
+            Int32Rect.Empty,
+            data.Scan0,
+            data.Height * data.Stride,
+            data.Stride);
+        bmp.UnlockBits(data);
+        return bmp;
     }
 }

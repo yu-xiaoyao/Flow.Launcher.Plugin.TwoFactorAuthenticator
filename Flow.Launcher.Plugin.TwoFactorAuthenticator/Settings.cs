@@ -19,7 +19,6 @@ namespace Flow.Launcher.Plugin.TwoFactorAuthenticator
 
             foreach (var totpModel in TotpList)
             {
-                totpModel.Name = totpModel.Issuer + ":" + totpModel.AccountTitle;
                 list.Add(totpModel);
             }
 

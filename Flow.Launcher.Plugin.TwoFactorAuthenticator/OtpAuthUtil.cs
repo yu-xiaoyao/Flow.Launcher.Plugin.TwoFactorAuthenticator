@@ -81,10 +81,16 @@ public class OtpAuthUtil
     }
 
 
+    public static bool IsValidOtpUrl(string url)
+    {
+        return url.StartsWith("otpauth://");
+    }
+
+
     [CanBeNull]
     public static OtpAuthModel ResolveOtpUrl(string url)
     {
-        if (!url.StartsWith("otpauth://"))
+        if (!IsValidOtpUrl(url))
             return null;
 
         var uri = new Uri(url);

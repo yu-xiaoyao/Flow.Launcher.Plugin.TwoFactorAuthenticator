@@ -10,11 +10,18 @@
 
         <StackPanel Orientation="Horizontal" Margin="10" HorizontalAlignment="Left">
             <Button Width="220" Margin="5 0 0 0" Name="ImportQrCodeBtn" Click="ImportQrCodeBtn_Click">Import From QRCode File</Button>
-            <Button Width="180" Margin="5 0 0 0">Import From Clipboard</Button>
+            <Button Width="180" Margin="5 0 0 0" Name="ImportClipboard" Click="ImportClipboard_Click">Import From Clipboard</Button>
         </StackPanel>
 
         <DockPanel Margin="10" DockPanel.Dock="Top">
             <StackPanel>
+
+
+                <StackPanel Orientation="Horizontal" Margin="5">
+                    <TextBlock VerticalAlignment="Center" TextAlignment="Center" Width="100">Name:</TextBlock>
+                    <TextBox Name="TextBoxName" Width="500"></TextBox>
+                </StackPanel>
+
 
                 <StackPanel Orientation="Horizontal" Margin="5">
                     <TextBlock VerticalAlignment="Center" TextAlignment="Center" Width="100" Foreground="Red">* Secret:</TextBlock>

@@ -1,6 +1,8 @@
-﻿using System;
+﻿using JetBrains.Annotations;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -23,6 +25,8 @@ namespace Flow.Launcher.Plugin.TwoFactorAuthenticator
         private readonly PluginInitContext _context;
         private readonly Settings _settings;
 
+        private ContextMenu _totpContextMenu;
+
         public SettingsControlPanel(PluginInitContext context, Settings settings)
         {
             _context = context;
@@ -35,15 +39,19 @@ namespace Flow.Launcher.Plugin.TwoFactorAuthenticator
 
         private void InitSettingData()
         {
+            _totpContextMenu = CreateTotpContextMenu();
+
+
             TotpDataGrid.IsReadOnly = true;
             TotpDataGrid.ItemsSource = _settings.TotpList;
+            TotpDataGrid.ContextMenu = _totpContextMenu;
         }
 
         private void Totp_Add_Click(object sender, RoutedEventArgs e)
         {
             var totpAdd = new TotpAddWindows(AddTotpItemToSettings)
             {
-                Name = "Add TOTP",
+                Title = "Add TOTP",
                 Topmost = true,
                 WindowStartupLocation = WindowStartupLocation.CenterScreen,
                 ResizeMode = ResizeMode.NoResize,
@@ -52,35 +60,126 @@ namespace Flow.Launcher.Plugin.TwoFactorAuthenticator
             totpAdd.ShowDialog();
         }
 
-        private void AddTotpItemToSettings(TotpModel totp)
+        private void Save_Settings(object sender, RoutedEventArgs e)
         {
-            var findIndex = -1;
-            for (var i = 0; i < _settings.TotpList.Count; i++)
+            _context.API.SavePluginSettings();
+        }
+
+
+        private void DataGrid_Mouse_Double_Click(object sender, MouseButtonEventArgs e)
+        {
+            var dg = (sender as DataGrid)!;
+
+            var index = dg.SelectedIndex;
+
+            if (index < 0) return;
+
+            var item = dg.SelectedItem;
+            if (item is TotpModel totp)
             {
-                var item = _settings.TotpList[i];
-                if (!item.Secret.Equals(totp.Secret)) continue;
-                findIndex = i;
-                break;
+                var totpAdd = new TotpAddWindows(AddTotpItemToSettings, totp, index)
+                {
+                    Title = "Edit TOTP",
+                    Topmost = true,
+                    WindowStartupLocation = WindowStartupLocation.CenterScreen,
+                    ResizeMode = ResizeMode.NoResize,
+                    ShowInTaskbar = false,
+                };
+                totpAdd.ShowDialog();
             }
+        }
 
-            _settings.TotpList.Add(totp);
+        private void AddTotpItemToSettings(TotpModel totp, int index)
+        {
+            if (index >= 0)
+            {
+                // UPDATE
+                _settings.TotpList[index] = totp;
+            }
+            else
+            {
+                var findIndex = -1;
+                for (var i = 0; i < _settings.TotpList.Count; i++)
+                {
+                    var item = _settings.TotpList[i];
+                    if (!item.Secret.Equals(totp.Secret)) continue;
+                    findIndex = i;
+                    break;
+                }
 
-            //TODO valid dep
-            // if (findIndex != -1)
-            // {
-            //     var oldItem = _settings.TotpList[findIndex];
-            //
-            //     var result = MessageBox.Show("Secret duplication");
-            //     if (result == MessageBoxResult.OK)
-            //     {
-            //         // replace 
-            //         _settings.TotpList[findIndex] = totp;
-            //     }
-            // }
-            // else
-            // {
-            //     _settings.TotpList.Add(totp);
-            // }
+                if (findIndex != -1)
+                {
+                    var oldItem = _settings.TotpList[findIndex];
+
+                    // _context.API.ShowMsg("Two factor authenticator secret duplication",);
+
+                    var result = MessageBox.Show("Two factor authenticator secret duplication");
+                    if (result is MessageBoxResult.OK or MessageBoxResult.Yes)
+                    {
+                        // replace update
+                        _settings.TotpList[findIndex] = totp;
+                    }
+                }
+                else
+                {
+                    _settings.TotpList.Add(totp);
+                }
+            }
+        }
+
+        private void DataGrid_Mouse_Right_Button_Down(object sender, MouseButtonEventArgs e)
+        {
+            var dg = (sender as DataGrid)!;
+
+            var index = dg.SelectedIndex;
+
+            if (index < 0) return;
+        }
+
+        private ContextMenu CreateTotpContextMenu()
+        {
+            var updateItem = new MenuItem
+            {
+                Header = "Update",
+            };
+            updateItem.Click += (o, args) =>
+            {
+                // var item = dg.SelectedItem;
+                // if (item is TotpModel totp)
+                // {
+                //     var totpAdd = new TotpAddWindows(AddTotpItemToSettings, totp, index)
+                //     {
+                //         Title = "Edit TOTP",
+                //         Topmost = true,
+                //         WindowStartupLocation = WindowStartupLocation.CenterScreen,
+                //         ResizeMode = ResizeMode.NoResize,
+                //         ShowInTaskbar = false,
+                //     };
+                //     totpAdd.ShowDialog();
+                // }
+            };
+            var deleteItem = new MenuItem
+            {
+                Header = "Delete",
+            };
+            deleteItem.Click += (o, args) =>
+            {
+                var result = MessageBox.Show("Delete 2fa? ", "Confirm Delete?", MessageBoxButton.YesNoCancel);
+                // if (result == MessageBoxResult.Yes)
+                // {
+                //     _settings.TotpList.RemoveAt(index);
+                // }
+            };
+
+            return new ContextMenu
+            {
+                Items =
+                {
+                    updateItem,
+                    deleteItem,
+                },
+                StaysOpen = true
+            };
         }
     }
 }

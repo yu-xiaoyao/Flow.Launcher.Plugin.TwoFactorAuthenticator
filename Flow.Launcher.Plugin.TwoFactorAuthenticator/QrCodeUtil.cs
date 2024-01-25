@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
@@ -18,8 +19,16 @@ public class QrCodeUtil
     public static string ResolveQrCodeFile(string filePath)
     {
         if (!File.Exists(filePath)) return null;
-        var bitmap = new Bitmap(filePath);
-        return ResolveQrCode(bitmap);
+        try
+        {
+            var bitmap = new Bitmap(filePath);
+            return ResolveQrCode(bitmap);
+        }
+        catch (Exception e)
+        {
+            // error
+            return null;
+        }
     }
 
     /// <summary>

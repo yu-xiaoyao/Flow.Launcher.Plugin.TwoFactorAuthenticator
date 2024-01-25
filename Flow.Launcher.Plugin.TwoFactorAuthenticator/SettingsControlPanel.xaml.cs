@@ -25,7 +25,6 @@ namespace Flow.Launcher.Plugin.TwoFactorAuthenticator
         private readonly PluginInitContext _context;
         private readonly Settings _settings;
 
-        private ContextMenu _totpContextMenu;
 
         public SettingsControlPanel(PluginInitContext context, Settings settings)
         {
@@ -39,12 +38,9 @@ namespace Flow.Launcher.Plugin.TwoFactorAuthenticator
 
         private void InitSettingData()
         {
-            _totpContextMenu = CreateTotpContextMenu();
-
-
             TotpDataGrid.IsReadOnly = true;
             TotpDataGrid.ItemsSource = _settings.TotpList;
-            TotpDataGrid.ContextMenu = _totpContextMenu;
+            AddTotpContextMenu();
         }
 
         private void Totp_Add_Click(object sender, RoutedEventArgs e)
@@ -111,9 +107,10 @@ namespace Flow.Launcher.Plugin.TwoFactorAuthenticator
                 {
                     var oldItem = _settings.TotpList[findIndex];
 
-                    // _context.API.ShowMsg("Two factor authenticator secret duplication",);
-
-                    var result = MessageBox.Show("Two factor authenticator secret duplication");
+                    var result =
+                        MessageBox.Show(
+                            $"Two factor authenticator secret duplication old name = {oldItem.Name}, new  name = {totp.Name}",
+                            "Confirm Replace?");
                     if (result is MessageBoxResult.OK or MessageBoxResult.Yes)
                     {
                         // replace update
@@ -127,16 +124,8 @@ namespace Flow.Launcher.Plugin.TwoFactorAuthenticator
             }
         }
 
-        private void DataGrid_Mouse_Right_Button_Down(object sender, MouseButtonEventArgs e)
-        {
-            var dg = (sender as DataGrid)!;
 
-            var index = dg.SelectedIndex;
-
-            if (index < 0) return;
-        }
-
-        private ContextMenu CreateTotpContextMenu()
+        private void AddTotpContextMenu()
         {
             var updateItem = new MenuItem
             {
@@ -144,19 +133,20 @@ namespace Flow.Launcher.Plugin.TwoFactorAuthenticator
             };
             updateItem.Click += (o, args) =>
             {
-                // var item = dg.SelectedItem;
-                // if (item is TotpModel totp)
-                // {
-                //     var totpAdd = new TotpAddWindows(AddTotpItemToSettings, totp, index)
-                //     {
-                //         Title = "Edit TOTP",
-                //         Topmost = true,
-                //         WindowStartupLocation = WindowStartupLocation.CenterScreen,
-                //         ResizeMode = ResizeMode.NoResize,
-                //         ShowInTaskbar = false,
-                //     };
-                //     totpAdd.ShowDialog();
-                // }
+                if (TotpDataGrid.SelectedIndex == -1) return;
+                var item = TotpDataGrid.SelectedItem;
+                if (item is TotpModel totp)
+                {
+                    var totpAdd = new TotpAddWindows(AddTotpItemToSettings, totp, TotpDataGrid.SelectedIndex)
+                    {
+                        Title = "Edit TOTP",
+                        Topmost = true,
+                        WindowStartupLocation = WindowStartupLocation.CenterScreen,
+                        ResizeMode = ResizeMode.NoResize,
+                        ShowInTaskbar = false,
+                    };
+                    totpAdd.ShowDialog();
+                }
             };
             var deleteItem = new MenuItem
             {
@@ -164,14 +154,21 @@ namespace Flow.Launcher.Plugin.TwoFactorAuthenticator
             };
             deleteItem.Click += (o, args) =>
             {
-                var result = MessageBox.Show("Delete 2fa? ", "Confirm Delete?", MessageBoxButton.YesNoCancel);
-                // if (result == MessageBoxResult.Yes)
-                // {
-                //     _settings.TotpList.RemoveAt(index);
-                // }
+                if (TotpDataGrid.SelectedIndex == -1) return;
+                var item = TotpDataGrid.SelectedItem;
+                if (item is TotpModel totp)
+                {
+                    var result = MessageBox.Show(
+                        $"confirm delete two factor authenticator , name = {totp.Name}, issuer = {totp.Issuer}",
+                        "Confirm Delete?", MessageBoxButton.YesNoCancel);
+                    if (result == MessageBoxResult.Yes)
+                    {
+                        _settings.TotpList.RemoveAt(TotpDataGrid.SelectedIndex);
+                    }
+                }
             };
 
-            return new ContextMenu
+            TotpDataGrid.ContextMenu = new ContextMenu
             {
                 Items =
                 {

@@ -84,6 +84,19 @@ public partial class TotpAddWindows : Window
                 result = QrCodeUtil.ResolveQrCode(bitmap);
             }
         }
+        else if (Clipboard.ContainsFileDropList())
+        {
+            var fileDropList = Clipboard.GetFileDropList();
+
+            if (fileDropList != null && fileDropList.Count > 0)
+            {
+                var file = fileDropList[0];
+                if (file != null && (file.EndsWith(".png") || file.EndsWith(".jpg") || file.EndsWith(".jpeg")))
+                {
+                    result = QrCodeUtil.ResolveQrCodeFile(file);
+                }
+            }
+        }
         else if (Clipboard.ContainsText(TextDataFormat.Text))
         {
             result = Clipboard.GetText(TextDataFormat.Text);

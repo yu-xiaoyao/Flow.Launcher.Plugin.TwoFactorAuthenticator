@@ -23,7 +23,6 @@
                                   VerticalScrollBarVisibility="Auto"
                                   Background="DarkGray"
                                   MouseDoubleClick="DataGrid_Mouse_Double_Click"
-                                  MouseRightButtonDown="DataGrid_Mouse_Right_Button_Down"
                                   CanUserAddRows="False">
 
                             <DataGrid.Columns>

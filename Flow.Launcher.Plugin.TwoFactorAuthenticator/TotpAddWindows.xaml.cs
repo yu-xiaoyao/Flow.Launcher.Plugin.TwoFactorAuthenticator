@@ -18,7 +18,7 @@ public partial class TotpAddWindows : Window
 {
     [CanBeNull] private readonly OnTotpAdd _totpAdd;
 
-    public TotpAddWindows([CanBeNull] OnTotpAdd totpAdd)
+    public TotpAddWindows([CanBeNull] OnTotpAdd totpAdd, [CanBeNull] TotpModel oldData = null)
     {
         _totpAdd = totpAdd;
         InitializeComponent();

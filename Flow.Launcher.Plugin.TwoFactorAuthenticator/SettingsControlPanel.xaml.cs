@@ -35,13 +35,15 @@ namespace Flow.Launcher.Plugin.TwoFactorAuthenticator
 
         private void InitSettingData()
         {
-            // TestLabel.Content = $"COUNT is = {_settings.AuthenticatorItems.Count}";
+            TotpDataGrid.IsReadOnly = true;
+            TotpDataGrid.ItemsSource = _settings.TotpList;
         }
 
-        private void ImportTotpBtn_OnClick(object sender, RoutedEventArgs e)
+        private void Totp_Add_Click(object sender, RoutedEventArgs e)
         {
-            var totpAdd = new TotpAddWindows(AddTotpItem)
+            var totpAdd = new TotpAddWindows(AddTotpItemToSettings)
             {
+                Name = "Add TOTP",
                 Topmost = true,
                 WindowStartupLocation = WindowStartupLocation.CenterScreen,
                 ResizeMode = ResizeMode.NoResize,
@@ -50,7 +52,7 @@ namespace Flow.Launcher.Plugin.TwoFactorAuthenticator
             totpAdd.ShowDialog();
         }
 
-        private void AddTotpItem(TotpModel totp)
+        private void AddTotpItemToSettings(TotpModel totp)
         {
             var findIndex = -1;
             for (var i = 0; i < _settings.TotpList.Count; i++)
@@ -61,21 +63,24 @@ namespace Flow.Launcher.Plugin.TwoFactorAuthenticator
                 break;
             }
 
-            if (findIndex != -1)
-            {
-                var oldItem = _settings.TotpList[findIndex];
+            _settings.TotpList.Add(totp);
 
-                var result = MessageBox.Show("Secret duplication");
-                if (result == MessageBoxResult.OK)
-                {
-                    // replace 
-                    _settings.TotpList[findIndex] = totp;
-                }
-            }
-            else
-            {
-                _settings.TotpList.Add(totp);
-            }
+            //TODO valid dep
+            // if (findIndex != -1)
+            // {
+            //     var oldItem = _settings.TotpList[findIndex];
+            //
+            //     var result = MessageBox.Show("Secret duplication");
+            //     if (result == MessageBoxResult.OK)
+            //     {
+            //         // replace 
+            //         _settings.TotpList[findIndex] = totp;
+            //     }
+            // }
+            // else
+            // {
+            //     _settings.TotpList.Add(totp);
+            // }
         }
     }
 }

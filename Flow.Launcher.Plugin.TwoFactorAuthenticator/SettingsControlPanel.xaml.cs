@@ -35,7 +35,47 @@ namespace Flow.Launcher.Plugin.TwoFactorAuthenticator
 
         private void InitSettingData()
         {
-            TestLabel.Content = $"COUNT is = {_settings.AuthenticatorItems.Count}";
+            // TestLabel.Content = $"COUNT is = {_settings.AuthenticatorItems.Count}";
+        }
+
+        private void ImportTotpBtn_OnClick(object sender, RoutedEventArgs e)
+        {
+            var totpAdd = new TotpAddWindows(AddTotpItem)
+            {
+                Topmost = true,
+                WindowStartupLocation = WindowStartupLocation.CenterScreen,
+                ResizeMode = ResizeMode.NoResize,
+                ShowInTaskbar = false,
+            };
+            totpAdd.ShowDialog();
+        }
+
+        private void AddTotpItem(TotpModel totp)
+        {
+            var findIndex = -1;
+            for (var i = 0; i < _settings.TotpList.Count; i++)
+            {
+                var item = _settings.TotpList[i];
+                if (!item.Secret.Equals(totp.Secret)) continue;
+                findIndex = i;
+                break;
+            }
+
+            if (findIndex != -1)
+            {
+                var oldItem = _settings.TotpList[findIndex];
+
+                var result = MessageBox.Show("Secret duplication");
+                if (result == MessageBoxResult.OK)
+                {
+                    // replace 
+                    _settings.TotpList[findIndex] = totp;
+                }
+            }
+            else
+            {
+                _settings.TotpList.Add(totp);
+            }
         }
     }
 }

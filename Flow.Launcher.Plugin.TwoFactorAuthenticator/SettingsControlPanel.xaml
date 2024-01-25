@@ -7,24 +7,12 @@
              mc:Ignorable="d"
              d:DesignHeight="450" d:DesignWidth="800">
 
-    <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*" />
-        </Grid.ColumnDefinitions>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="auto"></RowDefinition>
+    <StackPanel Width="800" Height="450" HorizontalAlignment="Center">
 
-            <RowDefinition Height="*"></RowDefinition>
-        </Grid.RowDefinitions>
-
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-            <Button Content="新增列" Command="{Binding AddColumnCmd}" Margin="5" />
-            <Button Content="删除列" Command="{Binding DeleteColumnCmd}" Margin="5" />
-            <Button Content="新增数据" Command="{Binding AddDataCmd}" Margin="5" />
+        <StackPanel>
+            <Button Name="ImportTotpBtn" Click="ImportTotpBtn_OnClick">导入</Button>
         </StackPanel>
 
- 
-
-    </Grid>
+    </StackPanel>
 
 </UserControl>

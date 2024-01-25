@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Controls;
@@ -25,12 +27,33 @@ namespace Flow.Launcher.Plugin.TwoFactorAuthenticator
         {
             var result = new List<Result>();
 
-            result.Add(new Result
+            var search = query.Search.TrimStart();
+
+            var isNullSearch = string.IsNullOrEmpty(search);
+            var otpList = _settings.GetOtpList();
+
+            foreach (var otp in otpList)
             {
-                Title = "Test",
-                SubTitle = "SubTitle",
-                IcoPath = IconPath
-            });
+                if (!isNullSearch)
+                {
+                    if (!otp.Name.Contains(search, StringComparison.OrdinalIgnoreCase))
+                        continue;
+                }
+
+                if (otp is TotpModel totp)
+                {
+                    result.Add(new Result
+                    {
+                        Title = totp.Issuer, SubTitle = totp.AccountTitle, IcoPath = IconPath, ContextData = totp,
+                        Action = _ =>
+                        {
+                            var code = OtpAuthUtil.GetCurrentPIN(totp.Secret, totp.Algorithm);
+                            _context.API.CopyToClipboard(code);
+                            return true;
+                        }
+                    });
+                }
+            }
 
             return result;
         }

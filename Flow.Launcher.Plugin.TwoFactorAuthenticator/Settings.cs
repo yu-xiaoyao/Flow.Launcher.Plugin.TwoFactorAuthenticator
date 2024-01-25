@@ -1,12 +1,7 @@
-﻿using JetBrains.Annotations;
-using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
+using System.Text.Json.Serialization;
+using System.Windows.Documents;
 
 namespace Flow.Launcher.Plugin.TwoFactorAuthenticator
 {
@@ -15,17 +10,20 @@ namespace Flow.Launcher.Plugin.TwoFactorAuthenticator
         public Settings()
         {
         }
-        
-        public ObservableCollection<AuthenticatorItem> AuthenticatorItems { get; set; } = new();
 
-    }
+        public ObservableCollection<TotpModel> TotpList { get; set; } = new();
 
+        public List<OtpAuthModel> GetOtpList()
+        {
+            var list = new List<OtpAuthModel>();
 
-    public record AuthenticatorItem
-    {
-        public string Name { get; set; }
-        public string Description { get; set; }
-        public string KeyType { get; set; }
-        public string Key { get; set; }
+            foreach (var totpModel in TotpList)
+            {
+                totpModel.Name = totpModel.Issuer + ":" + totpModel.AccountTitle;
+                list.Add(totpModel);
+            }
+
+            return list;
+        }
     }
 }

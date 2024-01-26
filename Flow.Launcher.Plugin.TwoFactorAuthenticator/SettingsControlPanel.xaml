@@ -12,6 +12,7 @@
             <StackPanel Orientation="Vertical">
                 <StackPanel Orientation="Horizontal" Margin="10">
                     <Button Margin="4" Click="Totp_Add_Click">Add TOTP</Button>
+                    <Button Margin="4" Click="Totp_Export_Json">Export Data</Button>
                     <Button Margin="4" Click="Save_Settings">Save Settings</Button>
                 </StackPanel>
 

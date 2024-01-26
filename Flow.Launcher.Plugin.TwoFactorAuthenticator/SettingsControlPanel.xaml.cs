@@ -1,19 +1,6 @@
-﻿using JetBrains.Annotations;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace Flow.Launcher.Plugin.TwoFactorAuthenticator
 {
@@ -54,6 +41,11 @@ namespace Flow.Launcher.Plugin.TwoFactorAuthenticator
                 ShowInTaskbar = false,
             };
             totpAdd.ShowDialog();
+        }
+
+        private void Totp_Export_Json(object sender, RoutedEventArgs e)
+        {
+            //TODO
         }
 
         private void Save_Settings(object sender, RoutedEventArgs e)

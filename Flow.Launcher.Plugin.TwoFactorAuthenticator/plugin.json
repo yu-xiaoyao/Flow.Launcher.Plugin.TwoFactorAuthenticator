@@ -2,7 +2,7 @@
     "ID": "789B27F3EB8B42D5B6EFB6EF7DFD2BE1",
     "ActionKeyword": "2fa",
     "Name": "TwoFactorAuthenticator",
-    "Description": "a new plugin for Flow",
+    "Description": "A Simple Plugin From Generate Two Factor Authenticator Code",
     "Author": "yu-xiaoyao",
     "Version": "1.0.0",
     "Language": "csharp",

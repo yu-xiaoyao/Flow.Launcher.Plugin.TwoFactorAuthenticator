@@ -32,6 +32,8 @@
   
   <ItemGroup>
     <PackageReference Include="Flow.Launcher.Plugin" Version="4.1.0" />
+    <PackageReference Include="Google.Protobuf" Version="3.26.0-rc2" />
+    <PackageReference Include="Google.Protobuf.Tools" Version="3.26.0-rc2" />
     <PackageReference Include="GoogleAuthenticator" Version="3.2.0" />
     <PackageReference Include="ZXing.Net" Version="0.16.9" />
      <PackageReference Include="ZXing.Net.Bindings.Windows.Compatibility" Version="0.16.12" />

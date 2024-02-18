@@ -1,6 +1,14 @@
-﻿using System.Windows;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Text.Encodings.Web;
+using System.Text.Json;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using Microsoft.Win32;
 
 namespace Flow.Launcher.Plugin.TwoFactorAuthenticator
 {
@@ -11,6 +19,8 @@ namespace Flow.Launcher.Plugin.TwoFactorAuthenticator
     {
         private readonly PluginInitContext _context;
         private readonly Settings _settings;
+
+        private JsonSerializerOptions _jsonSerializerOptions;
 
 
         public SettingsControlPanel(PluginInitContext context, Settings settings)
@@ -25,6 +35,12 @@ namespace Flow.Launcher.Plugin.TwoFactorAuthenticator
 
         private void InitSettingData()
         {
+            _jsonSerializerOptions = new JsonSerializerOptions
+            {
+                Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping, // 中文字不編碼
+                WriteIndented = true // 換行與縮排
+            };
+
             TotpDataGrid.IsReadOnly = true;
             TotpDataGrid.ItemsSource = _settings.TotpList;
             AddTotpContextMenu();
@@ -45,7 +61,51 @@ namespace Flow.Launcher.Plugin.TwoFactorAuthenticator
 
         private void Totp_Export_Json(object sender, RoutedEventArgs e)
         {
-            //TODO
+            ExportTotpJsonFile(_settings.TotpList.ToList());
+        }
+
+        private void Totp_Import_Json(object sender, RoutedEventArgs e)
+        {
+            var ofd = new OpenFileDialog
+            {
+                Filter = "Json File |*.json",
+                Multiselect = false
+            };
+            var openResult = ofd.ShowDialog();
+            if (openResult is not true) return;
+            var fileName = ofd.FileName;
+            if (!File.Exists(fileName)) return;
+            try
+            {
+                var content = File.ReadAllText(fileName);
+                var totpList = JsonSerializer.Deserialize(content, typeof(List<TotpModel>)) as List<TotpModel>;
+                foreach (var totpModel in totpList)
+                {
+                    if (OtpAuthUtil.TotpType == totpModel.Type)
+                    {
+                        //TODO valid json data valid
+                        _settings.TotpList.Add(totpModel);
+                    }
+                }
+            }
+            catch (Exception exception)
+            {
+                MessageBox.Show(exception.Message);
+            }
+        }
+
+
+        private void ExportTotpJsonFile(List<TotpModel> totpList)
+        {
+            var result = JsonSerializer.Serialize(totpList, _jsonSerializerOptions);
+            var saveFileDialog = new SaveFileDialog
+            {
+                Filter = "Json File |*.json"
+            };
+            var openResult = saveFileDialog.ShowDialog();
+            if (openResult is not true) return;
+            var filename = saveFileDialog.FileName;
+            File.WriteAllText(filename, result, Encoding.UTF8);
         }
 
         private void Save_Settings(object sender, RoutedEventArgs e)
@@ -63,18 +123,17 @@ namespace Flow.Launcher.Plugin.TwoFactorAuthenticator
             if (index < 0) return;
 
             var item = dg.SelectedItem;
-            if (item is TotpModel totp)
+            if (item is not TotpModel totp) return;
+
+            var totpAdd = new TotpAddWindows(AddTotpItemToSettings, totp, index)
             {
-                var totpAdd = new TotpAddWindows(AddTotpItemToSettings, totp, index)
-                {
-                    Title = "Edit TOTP",
-                    Topmost = true,
-                    WindowStartupLocation = WindowStartupLocation.CenterScreen,
-                    ResizeMode = ResizeMode.NoResize,
-                    ShowInTaskbar = false,
-                };
-                totpAdd.ShowDialog();
-            }
+                Title = "Edit TOTP",
+                Topmost = true,
+                WindowStartupLocation = WindowStartupLocation.CenterScreen,
+                ResizeMode = ResizeMode.NoResize,
+                ShowInTaskbar = false,
+            };
+            totpAdd.ShowDialog();
         }
 
         private void AddTotpItemToSettings(TotpModel totp, int index)
@@ -160,12 +219,29 @@ namespace Flow.Launcher.Plugin.TwoFactorAuthenticator
                 }
             };
 
+            var exportItem = new MenuItem
+            {
+                Header = "Export",
+            };
+            exportItem.Click += (o, args) =>
+            {
+                if (TotpDataGrid.SelectedIndex == -1) return;
+                var item = TotpDataGrid.SelectedItem;
+                if (item is TotpModel totp)
+                {
+                    var otpAuthModels = new List<TotpModel> { totp };
+                    ExportTotpJsonFile(otpAuthModels);
+                }
+            };
+
+
             TotpDataGrid.ContextMenu = new ContextMenu
             {
                 Items =
                 {
                     updateItem,
                     deleteItem,
+                    exportItem,
                 },
                 StaysOpen = true
             };

@@ -1,7 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Text.Json.Serialization;
-using System.Windows.Documents;
 
 namespace Flow.Launcher.Plugin.TwoFactorAuthenticator
 {
@@ -13,6 +11,11 @@ namespace Flow.Launcher.Plugin.TwoFactorAuthenticator
 
         public ObservableCollection<TotpModel> TotpList { get; set; } = new();
 
+
+        /// <summary>
+        /// 获取所有类型的
+        /// </summary>
+        /// <returns></returns>
         public List<OtpAuthModel> GetOtpList()
         {
             var list = new List<OtpAuthModel>();
@@ -21,6 +24,8 @@ namespace Flow.Launcher.Plugin.TwoFactorAuthenticator
             {
                 list.Add(totpModel);
             }
+
+            // more type add here
 
             return list;
         }

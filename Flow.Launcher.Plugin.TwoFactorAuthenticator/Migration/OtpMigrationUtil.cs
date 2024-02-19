@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Web;
+using Google.Authenticator;
 using JetBrains.Annotations;
 
 namespace Flow.Launcher.Plugin.TwoFactorAuthenticator.Migration;
@@ -19,7 +20,7 @@ public class OtpMigrationUtil
     private static readonly string ALGORITHM_MD5 = "ALGORITHM_MD5";
 
     [CanBeNull]
-    public static List<OtpAuthModel> ParseOtpMigration(string url)
+    public static List<OtpParam> ParseOtpMigration(string url)
     {
         var uri = new Uri(url);
 
@@ -39,6 +40,8 @@ public class OtpMigrationUtil
 
         // Console.WriteLine($"base64 data size = {fromBase64String.Length}");
 
+        var resultList = new List<OtpParam>();
+
         try
         {
             var payload = Payload.Parser.ParseFrom(fromBase64String);
@@ -47,23 +50,64 @@ public class OtpMigrationUtil
             var otpParameters = payload.OtpParameters;
             foreach (var parameter in otpParameters)
             {
-                Console.WriteLine($"parameter = {parameter}");
+                // Console.WriteLine($"parameter = {parameter}");
 
                 var otpType = (int)parameter.Type;
                 if (otpType == 2)
                 {
                     // TOTP
+                    var item = BuildTotp(parameter);
+                    if (item != null) resultList.Add(item);
                 }
                 else if (otpType == 1)
                 {
                     // HOTP
                 }
             }
+
+            return resultList;
         }
         catch (Exception e)
         {
         }
 
         return null;
+    }
+
+    [CanBeNull]
+    private static OtpParam BuildTotp(Payload.Types.OtpParameters parameters)
+    {
+        var digits = parameters.Digits switch
+        {
+            Payload.Types.OtpParameters.Types.DigitCount.Six => 6,
+            Payload.Types.OtpParameters.Types.DigitCount.Eight => 8,
+            _ => -1
+        };
+
+        // same with HashType
+        var algorithm = parameters.Algorithm switch
+        {
+            Payload.Types.OtpParameters.Types.Algorithm.Sha1 => "SHA1",
+            Payload.Types.OtpParameters.Types.Algorithm.Sha256 => "SHA256",
+            Payload.Types.OtpParameters.Types.Algorithm.Sha512 => "SHA512",
+            _ => "SHA1"
+        };
+
+        // var key = BitConverter.ToString(parameters.Secret.ToByteArray().Replace("-", "");
+        var key = Base32Encoding.ToString(parameters.Secret.ToByteArray());
+
+        // Console.WriteLine(key);
+        
+        var param = new OtpParam
+        {
+            OtpType = OtpParam.TotpType,
+            Secret = key,
+            Issuer = parameters.Issuer,
+            Name = parameters.Name,
+            Algorithm = algorithm,
+            Digits = digits,
+            Counter = parameters.Counter
+        };
+        return OtpAuthUtil.ValidTotpParam(param) ? param : null;
     }
 }

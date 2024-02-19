@@ -42,15 +42,15 @@ namespace Flow.Launcher.Plugin.TwoFactorAuthenticator
             };
 
             TotpDataGrid.IsReadOnly = true;
-            TotpDataGrid.ItemsSource = _settings.TotpList;
+            TotpDataGrid.ItemsSource = _settings.OtpParams;
             AddTotpContextMenu();
         }
 
-        private void Totp_Add_Click(object sender, RoutedEventArgs e)
+        private void Otp_Add_Click(object sender, RoutedEventArgs e)
         {
             var totpAdd = new TotpAddWindows(AddTotpItemToSettings)
             {
-                Title = "Add TOTP",
+                Title = "Add OTP",
                 Topmost = true,
                 WindowStartupLocation = WindowStartupLocation.CenterScreen,
                 ResizeMode = ResizeMode.NoResize,
@@ -59,12 +59,12 @@ namespace Flow.Launcher.Plugin.TwoFactorAuthenticator
             totpAdd.ShowDialog();
         }
 
-        private void Totp_Export_Json(object sender, RoutedEventArgs e)
+        private void Otp_Export_Json(object sender, RoutedEventArgs e)
         {
-            ExportTotpJsonFile(_settings.TotpList.ToList());
+            ExportTotpJsonFile(_settings.OtpParams.ToList());
         }
 
-        private void Totp_Import_Json(object sender, RoutedEventArgs e)
+        private void Otp_Import_Json(object sender, RoutedEventArgs e)
         {
             var ofd = new OpenFileDialog
             {
@@ -78,13 +78,14 @@ namespace Flow.Launcher.Plugin.TwoFactorAuthenticator
             try
             {
                 var content = File.ReadAllText(fileName);
-                var totpList = JsonSerializer.Deserialize(content, typeof(List<TotpModel>)) as List<TotpModel>;
-                foreach (var totpModel in totpList)
+                var totpList = JsonSerializer.Deserialize(content, typeof(List<OtpParam>)) as List<OtpParam>;
+                if (totpList == null) return;
+                foreach (var param in totpList)
                 {
-                    if (OtpAuthUtil.TotpType == totpModel.Type)
+                    if (param.OtpType == OtpParam.TotpType)
                     {
                         //TODO valid json data valid
-                        _settings.TotpList.Add(totpModel);
+                        _settings.OtpParams.Add(param);
                     }
                 }
             }
@@ -95,9 +96,8 @@ namespace Flow.Launcher.Plugin.TwoFactorAuthenticator
         }
 
 
-        private void ExportTotpJsonFile(List<TotpModel> totpList)
+        private void ExportTotpJsonFile(List<OtpParam> otpList)
         {
-            var result = JsonSerializer.Serialize(totpList, _jsonSerializerOptions);
             var saveFileDialog = new SaveFileDialog
             {
                 Filter = "Json File |*.json"
@@ -105,6 +105,7 @@ namespace Flow.Launcher.Plugin.TwoFactorAuthenticator
             var openResult = saveFileDialog.ShowDialog();
             if (openResult is not true) return;
             var filename = saveFileDialog.FileName;
+            var result = JsonSerializer.Serialize(otpList, _jsonSerializerOptions);
             File.WriteAllText(filename, result, Encoding.UTF8);
         }
 
@@ -123,11 +124,11 @@ namespace Flow.Launcher.Plugin.TwoFactorAuthenticator
             if (index < 0) return;
 
             var item = dg.SelectedItem;
-            if (item is not TotpModel totp) return;
+            if (item is not OtpParam otpParam) return;
 
-            var totpAdd = new TotpAddWindows(AddTotpItemToSettings, totp, index)
+            var totpAdd = new TotpAddWindows(AddTotpItemToSettings, otpParam, index)
             {
-                Title = "Edit TOTP",
+                Title = "Edit OTP",
                 Topmost = true,
                 WindowStartupLocation = WindowStartupLocation.CenterScreen,
                 ResizeMode = ResizeMode.NoResize,
@@ -136,41 +137,41 @@ namespace Flow.Launcher.Plugin.TwoFactorAuthenticator
             totpAdd.ShowDialog();
         }
 
-        private void AddTotpItemToSettings(TotpModel totp, int index)
+        private void AddTotpItemToSettings(OtpParam otpParam, int index)
         {
             if (index >= 0)
             {
                 // UPDATE
-                _settings.TotpList[index] = totp;
+                _settings.OtpParams[index] = otpParam;
             }
             else
             {
                 var findIndex = -1;
-                for (var i = 0; i < _settings.TotpList.Count; i++)
+                for (var i = 0; i < _settings.OtpParams.Count; i++)
                 {
-                    var item = _settings.TotpList[i];
-                    if (!item.Secret.Equals(totp.Secret)) continue;
+                    var item = _settings.OtpParams[i];
+                    if (!item.Secret.Equals(otpParam.Secret)) continue;
                     findIndex = i;
                     break;
                 }
 
                 if (findIndex != -1)
                 {
-                    var oldItem = _settings.TotpList[findIndex];
+                    var oldItem = _settings.OtpParams[findIndex];
 
                     var result =
                         MessageBox.Show(
-                            $"Two factor authenticator secret duplication old name = {oldItem.Name}, new  name = {totp.Name}",
+                            $"Two factor authenticator secret duplication old name = {oldItem.Name}, new  name = {otpParam.Name}",
                             "Confirm Replace?");
                     if (result is MessageBoxResult.OK or MessageBoxResult.Yes)
                     {
                         // replace update
-                        _settings.TotpList[findIndex] = totp;
+                        _settings.OtpParams[findIndex] = otpParam;
                     }
                 }
                 else
                 {
-                    _settings.TotpList.Add(totp);
+                    _settings.OtpParams.Add(otpParam);
                 }
             }
         }
@@ -186,9 +187,9 @@ namespace Flow.Launcher.Plugin.TwoFactorAuthenticator
             {
                 if (TotpDataGrid.SelectedIndex == -1) return;
                 var item = TotpDataGrid.SelectedItem;
-                if (item is TotpModel totp)
+                if (item is OtpParam param)
                 {
-                    var totpAdd = new TotpAddWindows(AddTotpItemToSettings, totp, TotpDataGrid.SelectedIndex)
+                    var totpAdd = new TotpAddWindows(AddTotpItemToSettings, param, TotpDataGrid.SelectedIndex)
                     {
                         Title = "Edit TOTP",
                         Topmost = true,
@@ -207,14 +208,14 @@ namespace Flow.Launcher.Plugin.TwoFactorAuthenticator
             {
                 if (TotpDataGrid.SelectedIndex == -1) return;
                 var item = TotpDataGrid.SelectedItem;
-                if (item is TotpModel totp)
+                if (item is OtpParam param)
                 {
                     var result = MessageBox.Show(
-                        $"confirm delete two factor authenticator , name = {totp.Name}, issuer = {totp.Issuer}",
+                        $"confirm delete two factor authenticator , name = {param.Name}, issuer = {param.Issuer}",
                         "Confirm Delete?", MessageBoxButton.YesNoCancel);
                     if (result == MessageBoxResult.Yes)
                     {
-                        _settings.TotpList.RemoveAt(TotpDataGrid.SelectedIndex);
+                        _settings.OtpParams.RemoveAt(TotpDataGrid.SelectedIndex);
                     }
                 }
             };
@@ -227,11 +228,9 @@ namespace Flow.Launcher.Plugin.TwoFactorAuthenticator
             {
                 if (TotpDataGrid.SelectedIndex == -1) return;
                 var item = TotpDataGrid.SelectedItem;
-                if (item is TotpModel totp)
-                {
-                    var otpAuthModels = new List<TotpModel> { totp };
-                    ExportTotpJsonFile(otpAuthModels);
-                }
+                if (item is not OtpParam param) return;
+                var otpAuthModels = new List<OtpParam> { param };
+                ExportTotpJsonFile(otpAuthModels);
             };
 
 

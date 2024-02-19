@@ -12,7 +12,7 @@ using ZXing;
 
 namespace Flow.Launcher.Plugin.TwoFactorAuthenticator;
 
-public delegate void OnTotpAdd(TotpModel model, int index);
+public delegate void OnTotpAdd(OtpParam model, int index);
 
 /// <summary>
 /// TotpAddWindows.xaml 的交互逻辑
@@ -21,9 +21,9 @@ public partial class TotpAddWindows : Window
 {
     [CanBeNull] private readonly OnTotpAdd _totpAdd;
     private readonly int _index;
-    [CanBeNull] private readonly TotpModel _oldData;
+    [CanBeNull] private readonly OtpParam _oldData;
 
-    public TotpAddWindows([CanBeNull] OnTotpAdd totpAdd, [CanBeNull] TotpModel oldData = null, int index = -1)
+    public TotpAddWindows([CanBeNull] OnTotpAdd totpAdd, [CanBeNull] OtpParam oldData = null, int index = -1)
     {
         _totpAdd = totpAdd;
         _oldData = oldData;
@@ -37,7 +37,7 @@ public partial class TotpAddWindows : Window
 
     private void InitData()
     {
-        var allAlgorithms = OtpAuthUtil.GetAllAlgorithms();
+        var allAlgorithms = TotpUtil.GetAllAlgorithms();
         var result = new List<string>();
         result.AddRange(allAlgorithms);
         result.Add(""); // default
@@ -53,11 +53,11 @@ public partial class TotpAddWindows : Window
             TextBoxName.Text = _oldData.Name ?? "";
             TextBoxSecret.Text = _oldData.Secret;
             TextBoxIssuer.Text = _oldData.Issuer;
-            TextBoxAccount.Text = _oldData.AccountTitle ?? "";
+            TextBoxRemark.Text = _oldData.Remark ?? "";
 
             if (!string.IsNullOrEmpty(_oldData.Algorithm))
             {
-                cbIndex = (int)OtpAuthUtil.ResolveHashTypeAlgorithm(_oldData.Algorithm);
+                cbIndex = (int)TotpUtil.ResolveHashTypeAlgorithm(_oldData.Algorithm);
             }
         }
 
@@ -88,7 +88,7 @@ public partial class TotpAddWindows : Window
         {
             var fileDropList = Clipboard.GetFileDropList();
 
-            if (fileDropList != null && fileDropList.Count > 0)
+            if (fileDropList.Count > 0)
             {
                 var file = fileDropList[0];
                 if (file != null && (file.EndsWith(".png") || file.EndsWith(".jpg") || file.EndsWith(".jpeg")))
@@ -104,14 +104,12 @@ public partial class TotpAddWindows : Window
 
         if (result == null) return;
 
-        var otpUrl = OtpAuthUtil.ResolveOtpUrl(result);
+        var param = OtpAuthUtil.ResolveOtpAuthUrl(result);
 
-        if (otpUrl is not TotpModel totp)
-        {
+        if (param == null)
             return;
-        }
 
-        SetDataView(totp);
+        SetDataView(param);
     }
 
     private void ImportQrCodeBtn_Click(object sender, RoutedEventArgs e)
@@ -140,30 +138,24 @@ public partial class TotpAddWindows : Window
             return;
         }
 
-        var otpUrl = OtpAuthUtil.ResolveOtpUrl(result);
-        if (otpUrl == null)
+        var param = OtpAuthUtil.ResolveOtpAuthUrl(result);
+        if (param == null)
         {
             TextBlockTip.Text = $"Invalid QRCode Data: {result}";
             return;
         }
 
-        if (otpUrl is not TotpModel totp)
-        {
-            TextBlockTip.Text = $"Not Support QRCode Data: {result}";
-            return;
-        }
-
-        SetDataView(totp);
+        SetDataView(param);
     }
 
-    private void SetDataView(TotpModel totp)
+    private void SetDataView(OtpParam param)
     {
-        if (totp.Algorithm != null)
+        if (param.Algorithm != null)
         {
             HashType hashType;
             try
             {
-                hashType = OtpAuthUtil.ResolveHashTypeAlgorithm(totp.Algorithm);
+                hashType = TotpUtil.ResolveHashTypeAlgorithm(param.Algorithm);
             }
             catch (Exception e)
             {
@@ -174,9 +166,9 @@ public partial class TotpAddWindows : Window
             ComboBoxAlgorithm.SelectedIndex = (int)hashType;
         }
 
-        TextBoxIssuer.Text = totp.Issuer;
-        TextBoxAccount.Text = totp.AccountTitle;
-        TextBoxSecret.Text = totp.Secret;
+        TextBoxIssuer.Text = param.Issuer;
+        TextBoxName.Text = param.Name;
+        TextBoxSecret.Text = param.Secret;
     }
 
     private void Confirm_Click(object sender, RoutedEventArgs e)
@@ -198,25 +190,25 @@ public partial class TotpAddWindows : Window
             return;
         }
 
-        var account = TextBoxAccount.Text.Trim();
-        if (account.Length == 0)
+        var name = TextBoxName.Text.Trim();
+        if (name.Length == 0)
         {
-            TextBlockTip.Text = "account can not be null";
-            TextBoxAccount.Focusable = true;
+            TextBlockTip.Text = "name can not be null";
+            TextBoxName.Focusable = true;
             return;
         }
 
         var alg = ComboBoxAlgorithm.SelectionBoxItem as string;
         var algorithm = string.IsNullOrEmpty(alg) ? null : alg;
 
-        var model = new TotpModel
+        var model = new OtpParam
         {
-            Type = OtpAuthUtil.TotpType,
-            Name = TextBoxName.Text.Trim(),
+            OtpType = OtpParam.TotpType,
+            Name = name,
             Secret = secret,
             Issuer = issuer,
-            AccountTitle = account,
-            Algorithm = algorithm
+            Algorithm = algorithm,
+            Remark = TextBoxRemark.Text.Trim(),
         };
         _totpAdd?.Invoke(model, _index);
         Close();

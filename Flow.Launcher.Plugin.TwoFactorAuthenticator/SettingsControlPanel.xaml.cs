@@ -8,6 +8,7 @@ using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using JetBrains.Annotations;
 using Microsoft.Win32;
 
 namespace Flow.Launcher.Plugin.TwoFactorAuthenticator
@@ -48,7 +49,7 @@ namespace Flow.Launcher.Plugin.TwoFactorAuthenticator
 
         private void Otp_Add_Click(object sender, RoutedEventArgs e)
         {
-            var totpAdd = new TotpAddWindows(AddTotpItemToSettings)
+            var totpAdd = new OtpAddWindows(AddTotpItemToSettings)
             {
                 Title = "Add OTP",
                 Topmost = true,
@@ -66,10 +67,65 @@ namespace Flow.Launcher.Plugin.TwoFactorAuthenticator
 
         private void Import_OTP_Migration_From_QrFile(object sender, RoutedEventArgs e)
         {
+            var ofd = new OpenFileDialog
+            {
+                Filter = "Image Files |*.png;*.jpg;*.jpeg|All Files (*.*)|*.*",
+                ShowReadOnly = true,
+                Multiselect = false
+            };
+
+            var showDialog = ofd.ShowDialog();
+            if (showDialog is not true) return;
+
+            var fileName = ofd.FileName;
+            if (!File.Exists(fileName)) return;
+
+            var otpMigration = QrCodeUtil.ResolveQrCodeFile(fileName);
+            AddOtpAuthMigration(otpMigration);
         }
 
         private void Import_OTP_Migration_From_Clipboard(object sender, RoutedEventArgs e)
         {
+            string otpMigration = null;
+            if (Clipboard.ContainsImage())
+            {
+                var bitmap = QrCodeUtil.GetBitmap(Clipboard.GetImage());
+                if (bitmap != null)
+                {
+                    otpMigration = QrCodeUtil.ResolveQrCode(bitmap);
+                }
+            }
+            else if (Clipboard.ContainsFileDropList())
+            {
+                var fileDropList = Clipboard.GetFileDropList();
+
+                if (fileDropList.Count > 0)
+                {
+                    var file = fileDropList[0];
+                    if (file != null && (file.EndsWith(".png") || file.EndsWith(".jpg") || file.EndsWith(".jpeg")))
+                    {
+                        otpMigration = QrCodeUtil.ResolveQrCodeFile(file);
+                    }
+                }
+            }
+            else if (Clipboard.ContainsText(TextDataFormat.Text))
+            {
+                otpMigration = Clipboard.GetText(TextDataFormat.Text);
+            }
+
+            AddOtpAuthMigration(otpMigration);
+        }
+
+        private void AddOtpAuthMigration([CanBeNull] string otpMigration)
+        {
+            if (string.IsNullOrWhiteSpace(otpMigration)) return;
+
+            var otpParams = OtpAuthUtil.ResolveOtpAuthMigrationUrl(otpMigration);
+            if (otpParams is not { Count: > 0 }) return;
+            foreach (var otpParam in otpParams)
+            {
+                _settings.OtpParams.Add(otpParam);
+            }
         }
 
         private void Otp_Import_Json(object sender, RoutedEventArgs e)
@@ -134,7 +190,7 @@ namespace Flow.Launcher.Plugin.TwoFactorAuthenticator
             var item = dg.SelectedItem;
             if (item is not OtpParam otpParam) return;
 
-            var totpAdd = new TotpAddWindows(AddTotpItemToSettings, otpParam, index)
+            var totpAdd = new OtpAddWindows(AddTotpItemToSettings, otpParam, index)
             {
                 Title = "Edit OTP",
                 Topmost = true,
@@ -197,7 +253,7 @@ namespace Flow.Launcher.Plugin.TwoFactorAuthenticator
                 var item = TotpDataGrid.SelectedItem;
                 if (item is OtpParam param)
                 {
-                    var totpAdd = new TotpAddWindows(AddTotpItemToSettings, param, TotpDataGrid.SelectedIndex)
+                    var totpAdd = new OtpAddWindows(AddTotpItemToSettings, param, TotpDataGrid.SelectedIndex)
                     {
                         Title = "Edit TOTP",
                         Topmost = true,

@@ -1,4 +1,4 @@
-﻿<Window x:Class="Flow.Launcher.Plugin.TwoFactorAuthenticator.TotpAddWindows"
+﻿<Window x:Class="Flow.Launcher.Plugin.TwoFactorAuthenticator.OtpAddWindows"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -16,6 +16,11 @@
         <DockPanel Margin="10" DockPanel.Dock="Top">
             <StackPanel>
 
+                <StackPanel Orientation="Horizontal" Margin="5">
+                    <TextBlock VerticalAlignment="Center" TextAlignment="Center" Width="100">OtpType:</TextBlock>
+                    <ComboBox Name="ComboBoxOtpType" Width="500" HorizontalAlignment="Center">
+                    </ComboBox>
+                </StackPanel>
 
                 <StackPanel Orientation="Horizontal" Margin="5">
                     <TextBlock VerticalAlignment="Center" TextAlignment="Center" Width="100">Remark:</TextBlock>
@@ -42,6 +47,16 @@
                     <TextBlock VerticalAlignment="Center" TextAlignment="Center" Width="100">Algorithm:</TextBlock>
                     <ComboBox Name="ComboBoxAlgorithm" Width="500" HorizontalAlignment="Center">
                     </ComboBox>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" Margin="5">
+                    <TextBlock VerticalAlignment="Center" TextAlignment="Center" Width="100">* Digits:</TextBlock>
+                    <ComboBox Name="ComboBoxDigits" Width="500"></ComboBox>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" Margin="5">
+                    <TextBlock VerticalAlignment="Center" TextAlignment="Center" Width="100">* Counter:</TextBlock>
+                    <TextBox Name="TextBoxCounter" Width="500"></TextBox>
                 </StackPanel>
 
             </StackPanel>

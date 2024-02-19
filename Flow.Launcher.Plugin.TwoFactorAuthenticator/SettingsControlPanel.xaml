@@ -29,11 +29,14 @@
                           CanUserAddRows="False">
 
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="Remark" Width="2*" Binding="{Binding Remark}" />
-                        <DataGridTextColumn Header="Issuer" Width="3*" Binding="{Binding Issuer}" />
-                        <DataGridTextColumn Header="Name" Width="2*" Binding="{Binding Name}" />
-                        <DataGridTextColumn Header="Algorithm" Width="1*" Binding="{Binding Algorithm}" />
-                        <DataGridTextColumn Header="Secret" Width="3*" Binding="{Binding Secret}" />
+                        <DataGridTextColumn Header="OtpType" Width="2*" Binding="{Binding OtpType}" />
+                        <DataGridTextColumn Header="Remark" Width="4*" Binding="{Binding Remark}" />
+                        <DataGridTextColumn Header="Issuer" Width="4*" Binding="{Binding Issuer}" />
+                        <DataGridTextColumn Header="Name" Width="4*" Binding="{Binding Name}" />
+                        <DataGridTextColumn Header="Algorithm" Width="2*" Binding="{Binding Algorithm}" />
+                        <DataGridTextColumn Header="Secret" Width="4*" Binding="{Binding Secret}" />
+                        <DataGridTextColumn Header="Digits" Width="2*" Binding="{Binding Digits}" />
+                        <DataGridTextColumn Header="Counter" Width="2*" Binding="{Binding Counter}" />
                     </DataGrid.Columns>
 
                 </DataGrid>

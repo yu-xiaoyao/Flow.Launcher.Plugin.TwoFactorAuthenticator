@@ -17,13 +17,13 @@ public delegate void OnTotpAdd(OtpParam model, int index);
 /// <summary>
 /// TotpAddWindows.xaml 的交互逻辑
 /// </summary>
-public partial class TotpAddWindows : Window
+public partial class OtpAddWindows : Window
 {
     [CanBeNull] private readonly OnTotpAdd _totpAdd;
     private readonly int _index;
     [CanBeNull] private readonly OtpParam _oldData;
 
-    public TotpAddWindows([CanBeNull] OnTotpAdd totpAdd, [CanBeNull] OtpParam oldData = null, int index = -1)
+    public OtpAddWindows([CanBeNull] OnTotpAdd totpAdd, [CanBeNull] OtpParam oldData = null, int index = -1)
     {
         _totpAdd = totpAdd;
         _oldData = oldData;
@@ -37,30 +37,54 @@ public partial class TotpAddWindows : Window
 
     private void InitData()
     {
-        var allAlgorithms = TotpUtil.GetAllAlgorithms();
-        var result = new List<string>();
-        result.AddRange(allAlgorithms);
-        result.Add(""); // default
+        // type
+        ComboBoxOtpType.Items.Add(OtpParam.TotpType);
+        ComboBoxOtpType.Items.Add(OtpParam.HotpType);
 
-        foreach (var item in result)
+        ComboBoxDigits.Items.Add("6");
+        ComboBoxDigits.Items.Add("8");
+
+        var allAlgorithms = TotpUtil.GetAllAlgorithms();
+        var algorithmList = new List<string>();
+        algorithmList.AddRange(allAlgorithms);
+        algorithmList.Add(""); // default
+
+        foreach (var item in algorithmList)
             ComboBoxAlgorithm.Items.Add(item);
 
+        var cbIndex = algorithmList.Count - 1;
 
-        var cbIndex = result.Count - 1;
         if (_oldData != null)
         {
+            ImportQrCodeBtn.IsEnabled = false;
+            ImportClipboard.IsEnabled = false;
+
+            if (_oldData.OtpType == OtpParam.HotpType)
+                ComboBoxOtpType.SelectedIndex = 1;
+            else
+                ComboBoxOtpType.SelectedIndex = 0; // default TOTP
+
+            if (_oldData.Digits == 8) ComboBoxDigits.SelectedIndex = 1;
+            else ComboBoxDigits.SelectedIndex = 0;
+
+
             // update 
             TextBoxName.Text = _oldData.Name ?? "";
             TextBoxSecret.Text = _oldData.Secret;
             TextBoxIssuer.Text = _oldData.Issuer;
             TextBoxRemark.Text = _oldData.Remark ?? "";
+            TextBoxCounter.Text = $"{_oldData.Counter}";
 
             if (!string.IsNullOrEmpty(_oldData.Algorithm))
             {
                 cbIndex = (int)TotpUtil.ResolveHashTypeAlgorithm(_oldData.Algorithm);
             }
         }
-
+        else
+        {
+            ComboBoxOtpType.SelectedIndex = 0;
+            ComboBoxDigits.SelectedIndex = 0;
+        }
 
         ComboBoxAlgorithm.SelectedIndex = cbIndex;
     }
@@ -198,6 +222,18 @@ public partial class TotpAddWindows : Window
             return;
         }
 
+        ulong counter = 0;
+        if (!string.IsNullOrEmpty(TextBoxCounter.Text.Trim()))
+        {
+            if (!ulong.TryParse(TextBoxCounter.Text.Trim(), out counter))
+            {
+                TextBlockTip.Text = "counter must be number";
+                TextBoxCounter.Focusable = true;
+                return;
+            }
+        }
+
+
         var alg = ComboBoxAlgorithm.SelectionBoxItem as string;
         var algorithm = string.IsNullOrEmpty(alg) ? null : alg;
 
@@ -209,6 +245,8 @@ public partial class TotpAddWindows : Window
             Issuer = issuer,
             Algorithm = algorithm,
             Remark = TextBoxRemark.Text.Trim(),
+            Digits = ComboBoxDigits.SelectedIndex == 0 ? 6 : 8,
+            Counter = counter
         };
         _totpAdd?.Invoke(model, _index);
         Close();

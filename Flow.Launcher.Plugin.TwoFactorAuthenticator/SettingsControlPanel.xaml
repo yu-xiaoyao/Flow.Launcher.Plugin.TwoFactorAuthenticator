@@ -10,9 +10,11 @@
 
     <StackPanel Orientation="Vertical">
         <StackPanel Orientation="Horizontal" Margin="10">
-            <Button Margin="4" Click="Otp_Add_Click">Add OTP</Button>
-            <Button Margin="4" Click="Otp_Export_Json">Export OTP</Button>
-            <Button Margin="4" Click="Otp_Import_Json">Import OTP</Button>
+            <Button Margin="4" Click="Otp_Add_Click">Add</Button>
+            <Button Margin="4" Click="Otp_Export_Json">Export</Button>
+            <Button Margin="4" Click="Otp_Import_Json">Import</Button>
+            <Button Margin="4" Click="Import_OTP_Migration_From_QrFile">OTP Migration QR File</Button>
+            <Button Margin="4" Click="Import_OTP_Migration_From_Clipboard">OTP Migration URL(Clipboard)</Button>
             <Button Margin="4" Click="Save_Settings">Save Settings</Button>
         </StackPanel>
 
@@ -30,7 +32,6 @@
                         <DataGridTextColumn Header="Remark" Width="2*" Binding="{Binding Remark}" />
                         <DataGridTextColumn Header="Issuer" Width="3*" Binding="{Binding Issuer}" />
                         <DataGridTextColumn Header="Name" Width="2*" Binding="{Binding Name}" />
-                        <DataGridTextColumn Header="AccountTitle" Width="3*" Binding="{Binding AccountTitle}" />
                         <DataGridTextColumn Header="Algorithm" Width="1*" Binding="{Binding Algorithm}" />
                         <DataGridTextColumn Header="Secret" Width="3*" Binding="{Binding Secret}" />
                     </DataGrid.Columns>

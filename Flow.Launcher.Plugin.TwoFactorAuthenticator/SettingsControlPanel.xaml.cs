@@ -64,6 +64,14 @@ namespace Flow.Launcher.Plugin.TwoFactorAuthenticator
             ExportTotpJsonFile(_settings.OtpParams.ToList());
         }
 
+        private void Import_OTP_Migration_From_QrFile(object sender, RoutedEventArgs e)
+        {
+        }
+
+        private void Import_OTP_Migration_From_Clipboard(object sender, RoutedEventArgs e)
+        {
+        }
+
         private void Otp_Import_Json(object sender, RoutedEventArgs e)
         {
             var ofd = new OpenFileDialog

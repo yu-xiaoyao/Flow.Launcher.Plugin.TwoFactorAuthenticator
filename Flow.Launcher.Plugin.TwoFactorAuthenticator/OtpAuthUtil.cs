@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
+using Flow.Launcher.Plugin.TwoFactorAuthenticator.Migration;
 using Google.Authenticator;
 using JetBrains.Annotations;
 using GoogleTwoFactorAuthenticator = Google.Authenticator.TwoFactorAuthenticator;
@@ -10,35 +11,142 @@ namespace Flow.Launcher.Plugin.TwoFactorAuthenticator;
 
 public class OtpAuthUtil
 {
-    public static readonly string TotpType = "totp";
-
-    /// <summary>
-    /// 生成当前PinCode
-    /// </summary>
-    /// <param name="secret"></param>
-    /// <param name="algorithm"></param>
-    /// <returns></returns>
-    public static string GetCurrentPIN(string secret, [CanBeNull] string algorithm)
+    [CanBeNull]
+    public static string GeneratePinCode(OtpParam param)
     {
-        var tfa = algorithm == null
-            ? new GoogleTwoFactorAuthenticator()
-            : new GoogleTwoFactorAuthenticator(ResolveHashTypeAlgorithm(algorithm));
-        return tfa.GetCurrentPIN(secret, DateTime.UtcNow, true);
+        if (param.OtpType == OtpParam.TotpType)
+        {
+            return TotpUtil.GenerateTOTPPinCode(param);
+        }
+        else if (param.OtpType == OtpParam.HotpType)
+        {
+            return HotpUtil.GenerateHOTPPinCode(param);
+        }
+
+        return null;
     }
+
+    private static bool ValidOtpParam(OtpParam param)
+    {
+        if (string.IsNullOrWhiteSpace(param.Secret)) return false;
+        if (string.IsNullOrWhiteSpace(param.Issuer)) return false;
+        if (string.IsNullOrWhiteSpace(param.Name)) return false;
+        if (param.Digits is not (6 or 8)) return false;
+        return true;
+    }
+
+    public static bool ValidTotpParam(OtpParam param)
+    {
+        if (!ValidOtpParam(param))
+            return false;
+
+        if (param.OtpType != OtpParam.TotpType) return false;
+
+
+        // Algorithm
+        if (param.Algorithm != null)
+        {
+            Enum.TryParse(typeof(HashType), param.Algorithm, false, out var hashAlgorithm);
+            if (hashAlgorithm is not HashType)
+            {
+                return false;
+            }
+        }
+
+
+        return true;
+    }
+
+    public static bool ValidHotpParam(OtpParam param)
+    {
+        if (!ValidOtpParam(param))
+            return false;
+
+        if (param.OtpType != OtpParam.HotpType) return false;
+
+        //TODO valid ...
+        return false;
+    }
+
+
+    [CanBeNull]
+    public static OtpParam ResolveOtpAuthUrl(string url)
+    {
+        if (url.StartsWith("otpauth://"))
+        {
+            var res = ParserOtpAuthUrl(url);
+            return res;
+        }
+
+        return null;
+    }
+
+    [CanBeNull]
+    public static OtpParam ParserOtpAuthUrl(string url)
+    {
+        var uri = new Uri(url);
+        if (OtpParam.TotpType.Equals(uri.Host))
+        {
+            var query = HttpUtility.ParseQueryString(uri.Query);
+            var issuer = query["issuer"];
+            var name = uri.AbsolutePath[1..];
+
+            var index = name.IndexOf(":", StringComparison.Ordinal);
+            if (index != -1)
+            {
+                if (string.IsNullOrEmpty(issuer))
+                    issuer = name[..index];
+
+                name = name[(index + 1)..];
+            }
+
+
+            var secret = query["secret"];
+            if (secret == null)
+                throw new Exception("otpauth url invalid. miss secret.");
+
+            var algorithm = query["algorithm"];
+
+            // check valid algorithm
+            TotpUtil.ResolveHashTypeAlgorithm(algorithm);
+
+            var param = new OtpParam
+            {
+                OtpType = OtpParam.TotpType,
+                Algorithm = algorithm,
+                Secret = secret,
+                Issuer = issuer,
+                Name = name
+            };
+
+            return param;
+        }
+
+        // 其他 OTP URL 解析
+        return null;
+    }
+
+
+    [CanBeNull]
+    public static List<OtpParam> ResolveOtpAuthMigrationUrl(string url)
+    {
+        if (url.StartsWith("otpauth-migration://"))
+        {
+            return OtpMigrationUtil.ParseOtpMigration(url);
+        }
+
+        return null;
+    }
+
 
     /// <summary>
     /// 生成分享二维码
     /// </summary>
     /// <param name="model"></param>
     /// <returns></returns>
-    public static byte[] CreateQRCode(OtpAuthModel model)
+    public static byte[] CreateQRCode(OtpParam model)
     {
-        if (model is TotpModel totp)
-        {
-            return CreateTotpQRCode(totp.Issuer, totp.AccountTitle, totp.Secret, totp.Algorithm);
-        }
-
-        //TODO more otp Algorithm
+        // return CreateTotpQRCode(totp.Issuer, totp.AccountTitle, totp.Secret, totp.Algorithm);
         return null;
     }
 
@@ -57,7 +165,7 @@ public class OtpAuthUtil
     {
         var tfa = algorithm == null
             ? new GoogleTwoFactorAuthenticator()
-            : new GoogleTwoFactorAuthenticator(ResolveHashTypeAlgorithm(algorithm));
+            : new GoogleTwoFactorAuthenticator(TotpUtil.ResolveHashTypeAlgorithm(algorithm));
 
         var setupCode = tfa.GenerateSetupCode(issuer, accountTitle, secret, true, qrPixel);
 
@@ -66,96 +174,24 @@ public class OtpAuthUtil
 
         return Convert.FromBase64String(imageData);
     }
-
-    public static HashType ResolveHashTypeAlgorithm([CanBeNull] string algorithm)
-    {
-        if (string.IsNullOrEmpty(algorithm))
-            return HashType.SHA1;
-        Enum.TryParse(typeof(HashType), algorithm, false, out var hashAlgorithm);
-        if (hashAlgorithm is not HashType hashType)
-        {
-            throw new Exception("otpauth url invalid algorithm.");
-        }
-
-        return hashType;
-    }
-
-
-    public static bool IsValidOtpUrl(string url)
-    {
-        return url.StartsWith("otpauth://");
-    }
-
-
-    [CanBeNull]
-    public static OtpAuthModel ResolveOtpUrl(string url)
-    {
-        if (!IsValidOtpUrl(url))
-            return null;
-
-        var uri = new Uri(url);
-        if (TotpType.Equals(uri.Host))
-        {
-            var query = HttpUtility.ParseQueryString(uri.Query);
-            var issuer = query["issuer"];
-            var account = uri.AbsolutePath[1..];
-
-            var index = account.IndexOf(":", StringComparison.Ordinal);
-            if (index != -1)
-            {
-                if (string.IsNullOrEmpty(issuer))
-                    issuer = account[..index];
-
-                account = account[(index + 1)..];
-            }
-
-
-            var secret = query["secret"];
-            if (secret == null)
-                throw new Exception("otpauth url invalid. miss secret.");
-
-            var algorithm = query["algorithm"];
-
-            // check valid algorithm
-            ResolveHashTypeAlgorithm(algorithm);
-
-            return new TotpModel
-            {
-                Type = TotpType,
-                Algorithm = algorithm,
-                Secret = secret,
-                Issuer = issuer,
-                AccountTitle = account
-            };
-        }
-
-        //TODO 更多其他类型
-        return null;
-    }
-
-    public static List<string> GetAllAlgorithms()
-    {
-        var hashTypes = Enum.GetValues<HashType>();
-        return hashTypes.Select(hashType => hashType.ToString()).ToList();
-    }
 }
 
-public record OtpAuthModel
-{
-    public string Type { set; get; }
-    public string Name { set; get; }
-}
-
-public record TotpModel : OtpAuthModel
-{
-    public string Issuer { set; get; }
-    public string AccountTitle { set; get; }
-    public string Secret { set; get; }
-
-    /// <summary>
-    /// 支持: SHA1,SHA256,SHA512
-    /// default SHA1
-    /// </summary>
-    [CanBeNull]
-    public string Algorithm { set; get; }
-}
+// public record OtpAuthModel
+// {
+//     public string Type { set; get; }
+//     public string Name { set; get; }
+// }
+//
+// public record TotpModel : OtpAuthModel
+// {
+//     public string Issuer { set; get; }
+//     public string AccountTitle { set; get; }
+//     public string Secret { set; get; }
+//
+//     /// <summary>
+//     /// 支持: SHA1,SHA256,SHA512
+//     /// default SHA1
+//     /// </summary>
+//     [CanBeNull]
+//     public string Algorithm { set; get; }
+// }

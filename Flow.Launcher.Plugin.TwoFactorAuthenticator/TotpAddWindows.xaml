@@ -18,8 +18,8 @@
 
 
                 <StackPanel Orientation="Horizontal" Margin="5">
-                    <TextBlock VerticalAlignment="Center" TextAlignment="Center" Width="100">Name:</TextBlock>
-                    <TextBox Name="TextBoxName" Width="500"></TextBox>
+                    <TextBlock VerticalAlignment="Center" TextAlignment="Center" Width="100">Remark:</TextBlock>
+                    <TextBox Name="TextBoxRemark" Width="500"></TextBox>
                 </StackPanel>
 
 
@@ -34,8 +34,8 @@
                 </StackPanel>
 
                 <StackPanel Orientation="Horizontal" Margin="5">
-                    <TextBlock VerticalAlignment="Center" TextAlignment="Center" Width="100" Foreground="Red">* Account:</TextBlock>
-                    <TextBox Name="TextBoxAccount" Width="500"></TextBox>
+                    <TextBlock VerticalAlignment="Center" TextAlignment="Center" Width="100" Foreground="Red">* Name:</TextBlock>
+                    <TextBox Name="TextBoxName" Width="500"></TextBox>
                 </StackPanel>
 
                 <StackPanel Orientation="Horizontal" Margin="5">

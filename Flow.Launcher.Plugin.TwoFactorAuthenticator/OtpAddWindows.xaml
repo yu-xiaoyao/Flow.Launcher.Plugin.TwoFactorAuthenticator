@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Flow.Launcher.Plugin.TwoFactorAuthenticator"
         mc:Ignorable="d"
-        Title="TotpAddWindows" Height="480" Width="660">
+        Title="TotpAddWindows" Width="660" Height="540">
     <StackPanel>
 
         <StackPanel Orientation="Horizontal" Margin="10" HorizontalAlignment="Left">
@@ -56,7 +56,9 @@
 
                 <StackPanel Orientation="Horizontal" Margin="5">
                     <TextBlock VerticalAlignment="Center" TextAlignment="Center" Width="100">* Counter:</TextBlock>
-                    <TextBox Name="TextBoxCounter" Width="500"></TextBox>
+                    <TextBox Name="TextBoxCounter" Width="500" InputMethod.IsInputMethodEnabled="False"
+                             PreviewTextInput="TextBoxCounter_PreviewTextInput">
+                    </TextBox>
                 </StackPanel>
 
             </StackPanel>
@@ -64,8 +66,8 @@
 
         <StackPanel Margin="10">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Height="30">
-                <Button Width="300" Margin="0 0 5 0" Click="Cancel_Click">取消</Button>
-                <Button Width="300" Margin="5 0 0 0" Click="Confirm_Click">确定</Button>
+                <Button Width="300" Margin="0 0 5 0" Click="Cancel_Click">Cancel</Button>
+                <Button Width="300" Margin="5 0 0 0" Click="Confirm_Click">Save</Button>
             </StackPanel>
 
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="10">

@@ -214,9 +214,12 @@ namespace Flow.Launcher.Plugin.TwoFactorAuthenticator
                 for (var i = 0; i < _settings.OtpParams.Count; i++)
                 {
                     var item = _settings.OtpParams[i];
-                    if (!item.Secret.Equals(otpParam.Secret)) continue;
-                    findIndex = i;
-                    break;
+
+                    if (item.OtpType == otpParam.OtpType && item.Secret == otpParam.Secret)
+                    {
+                        findIndex = i;
+                        break;
+                    }
                 }
 
                 if (findIndex != -1)
@@ -225,12 +228,17 @@ namespace Flow.Launcher.Plugin.TwoFactorAuthenticator
 
                     var result =
                         MessageBox.Show(
-                            $"Two factor authenticator secret duplication old name = {oldItem.Name}, new  name = {otpParam.Name}",
-                            "Confirm Replace?");
-                    if (result is MessageBoxResult.OK or MessageBoxResult.Yes)
+                            $"duplication secret. old name = {oldItem.Name}, new name = {otpParam.Name}",
+                            "Confirm Replace?", MessageBoxButton.YesNoCancel);
+                    if (result is MessageBoxResult.Yes)
                     {
                         // replace update
                         _settings.OtpParams[findIndex] = otpParam;
+                    }
+                    else if (result is MessageBoxResult.No)
+                    {
+                        // add 
+                        _settings.OtpParams.Add(otpParam);
                     }
                 }
                 else

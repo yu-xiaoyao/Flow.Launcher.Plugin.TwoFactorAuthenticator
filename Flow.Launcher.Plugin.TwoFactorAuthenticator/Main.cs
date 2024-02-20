@@ -70,8 +70,8 @@ namespace Flow.Launcher.Plugin.TwoFactorAuthenticator
 
             return new Result
             {
-                Title = string.IsNullOrWhiteSpace(param.Remark) ? param.Issuer : param.Remark,
-                SubTitle = param.Issuer + ":" + param.Name,
+                Title = string.IsNullOrWhiteSpace(param.Remark) ? param.Name : $"{param.Name}({param.Remark})",
+                SubTitle = param.Name + "(" + param.Issuer + ")",
                 IcoPath = IconPath,
                 ContextData = param,
                 Action = _ =>

@@ -30,13 +30,18 @@ public class OtpMigrationUtil
         }
 
         var queryString = HttpUtility.ParseQueryString(uri.Query);
+
+        // 这一步会自动URL decode...
         var data = queryString["data"];
         if (string.IsNullOrEmpty(data))
             return null;
-        // Console.WriteLine($"raw data = {data}");
-        var decodeData = HttpUtility.UrlDecode(data, Encoding.UTF8);
 
-        var fromBase64String = Convert.FromBase64String(decodeData);
+        // Console.WriteLine($"raw    data = {data}");
+        // data = HttpUtility.UrlDecode(data, Encoding.UTF8);
+        // Console.WriteLine($"http decode = {data}");
+
+
+        var fromBase64String = Convert.FromBase64String(data);
 
         // Console.WriteLine($"base64 data size = {fromBase64String.Length}");
 
@@ -97,7 +102,7 @@ public class OtpMigrationUtil
         var key = Base32Encoding.ToString(parameters.Secret.ToByteArray());
 
         // Console.WriteLine(key);
-        
+
         var param = new OtpParam
         {
             OtpType = OtpParam.TotpType,

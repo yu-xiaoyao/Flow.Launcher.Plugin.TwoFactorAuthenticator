@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Input;
 using Google.Authenticator;
@@ -84,6 +85,7 @@ public partial class OtpAddWindows : Window
         {
             ComboBoxOtpType.SelectedIndex = 0;
             ComboBoxDigits.SelectedIndex = 0;
+            TextBoxCounter.Text = "0";
         }
 
         ComboBoxAlgorithm.SelectedIndex = cbIndex;
@@ -233,13 +235,18 @@ public partial class OtpAddWindows : Window
             }
         }
 
+        var otpType = ComboBoxOtpType.SelectedIndex switch
+        {
+            1 => OtpParam.HotpType,
+            _ => OtpParam.TotpType
+        };
 
         var alg = ComboBoxAlgorithm.SelectionBoxItem as string;
         var algorithm = string.IsNullOrEmpty(alg) ? null : alg;
 
         var model = new OtpParam
         {
-            OtpType = OtpParam.TotpType,
+            OtpType = otpType,
             Name = name,
             Secret = secret,
             Issuer = issuer,
@@ -250,6 +257,14 @@ public partial class OtpAddWindows : Window
         };
         _totpAdd?.Invoke(model, _index);
         Close();
+    }
+
+    [GeneratedRegex("[^0-9]+")]
+    private static partial Regex MyRegex();
+
+    private void TextBoxCounter_PreviewTextInput(object sender, TextCompositionEventArgs e)
+    {
+        e.Handled = MyRegex().IsMatch(e.Text);
     }
 
     private void Cancel_Click(object sender, RoutedEventArgs e)

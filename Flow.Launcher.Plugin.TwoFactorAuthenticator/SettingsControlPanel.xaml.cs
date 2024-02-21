@@ -305,6 +305,37 @@ namespace Flow.Launcher.Plugin.TwoFactorAuthenticator
                 ExportTotpJsonFile(otpAuthModels);
             };
 
+            var moveUp = new MenuItem
+            {
+                Header = "Move Up",
+            };
+            moveUp.Click += (o, args) =>
+            {
+                var index = TotpDataGrid.SelectedIndex;
+                if (index <= 0) return;
+
+                var cur = _settings.OtpParams[index];
+                var pre = _settings.OtpParams[index - 1];
+
+                _settings.OtpParams[index] = pre;
+                _settings.OtpParams[index - 1] = cur;
+            };
+            var moveDown = new MenuItem
+            {
+                Header = "Move Down",
+            };
+            moveDown.Click += (o, args) =>
+            {
+                var index = TotpDataGrid.SelectedIndex;
+                if (index < _settings.OtpParams.Count - 1)
+                {
+                    var cur = _settings.OtpParams[index];
+                    var next = _settings.OtpParams[index + 1];
+
+                    _settings.OtpParams[index] = next;
+                    _settings.OtpParams[index + 1] = cur;
+                }
+            };
 
             TotpDataGrid.ContextMenu = new ContextMenu
             {
@@ -313,6 +344,8 @@ namespace Flow.Launcher.Plugin.TwoFactorAuthenticator
                     updateItem,
                     deleteItem,
                     exportItem,
+                    moveUp,
+                    moveDown,
                 },
                 StaysOpen = true
             };

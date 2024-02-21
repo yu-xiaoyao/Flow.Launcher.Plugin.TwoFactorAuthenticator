@@ -7,6 +7,6 @@
     "Version": "1.1.0-beta",
     "Language": "csharp",
     "Website": "https://github.com/yu-xiaoyao/Flow.Launcher.Plugin.TwoFactorAuthenticator",
-    "IcoPath": "Images\\TwoFactorAuthenticatorIcon.png",
+    "IcoPath": "TwoFactorAuthenticatorIcon.png",
     "ExecuteFileName": "Flow.Launcher.Plugin.TwoFactorAuthenticator.dll"
 }

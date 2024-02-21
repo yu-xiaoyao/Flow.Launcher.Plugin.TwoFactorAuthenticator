@@ -175,23 +175,3 @@ public class OtpAuthUtil
         return Convert.FromBase64String(imageData);
     }
 }
-
-// public record OtpAuthModel
-// {
-//     public string Type { set; get; }
-//     public string Name { set; get; }
-// }
-//
-// public record TotpModel : OtpAuthModel
-// {
-//     public string Issuer { set; get; }
-//     public string AccountTitle { set; get; }
-//     public string Secret { set; get; }
-//
-//     /// <summary>
-//     /// 支持: SHA1,SHA256,SHA512
-//     /// default SHA1
-//     /// </summary>
-//     [CanBeNull]
-//     public string Algorithm { set; get; }
-// }

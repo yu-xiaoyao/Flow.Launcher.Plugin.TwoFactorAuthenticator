@@ -27,11 +27,16 @@ public class Main_Test
     private static void pinyin()
     {
         var appData = Environment.GetEnvironmentVariable("LOCALAPPDATA");
-        var flowPath = appData + @"\FlowLauncher\app-1.18.0\";
-        PinYin.InitPinyinLib(flowPath);
-        PinYin.PinyinMatch?.SetKeywords(new List<string> { "东涌", "南基" });
+        PinYin.InitPinyinLib($@"{appData}\FlowLauncher\app-1.18.0\");
 
-        var matchResult1 = PinYin.PinyinMatch?.Find("dong");
+
+        Console.WriteLine(PinYin.WordsHelper?.HasChinese("-asdfajadf-"));
+        Console.WriteLine(PinYin.WordsHelper?.HasChinese("-asdfn这ajadf-"));
+
+
+        PinYin.PinyinMatch?.SetKeywords(new List<string> { "东 涌堡垒机", "南基" });
+
+        var matchResult1 = PinYin.PinyinMatch?.Find("dong y");
         Console.WriteLine(matchResult1);
         if (matchResult1 != null)
         {

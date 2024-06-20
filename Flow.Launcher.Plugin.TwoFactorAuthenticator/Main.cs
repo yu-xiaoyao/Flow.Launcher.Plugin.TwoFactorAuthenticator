@@ -1,14 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Controls;
 using JetBrains.Annotations;
 
 namespace Flow.Launcher.Plugin.TwoFactorAuthenticator
 {
-    public class TwoFactorAuthenticator : IPlugin, IContextMenu, ISettingProvider
+    public class TwoFactorAuthenticator : IPlugin, IContextMenu, ISettingProvider, IAsyncReloadable
     {
-        private const string IconPath = "TwoFactorAuthenticatorIcon.png";
+        private static string IconPath = "Images\\TwoFactorAuthenticatorIcon.png";
 
         private PluginInitContext _context;
         private Settings _settings;
@@ -20,28 +21,13 @@ namespace Flow.Launcher.Plugin.TwoFactorAuthenticator
             _settings = context.API.LoadSettingJsonStorage<Settings>();
 
             PinYin.InitPinyinLib();
+            LoadPinyinResult();
         }
 
-        private void TestPinYin(string key)
-        {
-            _context.API.LogInfo("TestPinYin", $"${_context.CurrentPluginMetadata.ExecuteFilePath}");
-            _context.API.LogInfo("TestPinYin", $"""key: {key}""");
-            try
-            {
-                Type type = Type.GetType("ToolGood.Words.Pinyin.WordsHelper");
-                _context.API.LogInfo("TestPinYin", $"type: ${type is null}. ${type}");
-            }
-            catch (Exception e)
-            {
-                _context.API.LogException("TestPinYin", e.Message, e);
-            }
-        }
 
         public List<Result> Query(Query query)
         {
             var search = query.Search.TrimStart();
-
-            TestPinYin(search);
 
             var result = _settings.OtpParams
                 .Select(param => SelectOtpParam(param, search))
@@ -58,14 +44,26 @@ namespace Flow.Launcher.Plugin.TwoFactorAuthenticator
             if (!searchKeyEmpty)
             {
                 // search is not empty
-                var hasRemark = param.Remark != null &&
-                                param.Remark.Contains(search, StringComparison.OrdinalIgnoreCase);
+
+                var hasRemark = false;
+                var pinyinMatch = false;
+                if (!string.IsNullOrWhiteSpace(param.Remark))
+                {
+                    hasRemark = param.Remark.Contains(search, StringComparison.OrdinalIgnoreCase);
+
+                    if (!hasRemark)
+                    {
+                        pinyinMatch = _matchByPinyin(param.Remark, search);
+                    }
+                }
+
 
                 var hasIssuer = param.Issuer.Contains(search, StringComparison.OrdinalIgnoreCase);
 
                 var hasName = param.Name.Contains(search, StringComparison.OrdinalIgnoreCase);
 
-                if (!hasName && !hasIssuer && !hasRemark)
+
+                if (!hasName && !hasIssuer && !hasRemark && !pinyinMatch)
                 {
                     return null;
                 }
@@ -95,6 +93,36 @@ namespace Flow.Launcher.Plugin.TwoFactorAuthenticator
         public Control CreateSettingPanel()
         {
             return new SettingsControlPanel(_context, _settings);
+        }
+
+        public Task ReloadDataAsync()
+        {
+            return Task.Run(() => { LoadPinyinResult(); });
+        }
+
+        private void LoadPinyinResult()
+        {
+            if (PinYin.PinyinMatch == null) return;
+
+            var keys = _settings.OtpParams
+                .Select(o => o.Remark)
+                .Where(s => !string.IsNullOrWhiteSpace(s))
+                .ToList();
+            PinYin.PinyinMatch.SetKeywords(keys);
+        }
+
+        private bool _matchByPinyin(string fromText, string search)
+        {
+            if (PinYin.WordsHelper == null) return false;
+            if (PinYin.PinyinMatch == null) return false;
+
+            var hasChinese = PinYin.WordsHelper.HasChinese(search);
+            if (hasChinese is not true) return false;
+            
+            var result = PinYin.PinyinMatch.Find(search);
+            if (result == null || !result.Any())
+                return false;
+            return result.Any(se => string.Equals(fromText, se, StringComparison.OrdinalIgnoreCase));
         }
     }
 }

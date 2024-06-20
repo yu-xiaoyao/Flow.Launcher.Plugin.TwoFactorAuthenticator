@@ -4,9 +4,9 @@
     "Name": "TwoFactorAuthenticator",
     "Description": "A Simple Plugin From Generate Two Factor Authenticator Code",
     "Author": "yu-xiaoyao",
-    "Version": "1.1.0-beta",
+    "Version": "1.1.2",
     "Language": "csharp",
     "Website": "https://github.com/yu-xiaoyao/Flow.Launcher.Plugin.TwoFactorAuthenticator",
-    "IcoPath": "TwoFactorAuthenticatorIcon.png",
+    "IcoPath": "Images\\TwoFactorAuthenticatorIcon.png",
     "ExecuteFileName": "Flow.Launcher.Plugin.TwoFactorAuthenticator.dll"
 }

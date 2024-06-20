@@ -22,6 +22,7 @@ public class PinYin
 
 
     /**
+     * init or reload plugin
      * must be end with /
      */
     public static void InitPinyinLib(string flowBaseDir)
@@ -33,7 +34,7 @@ public class PinYin
             _pinyinMatchType = assembly.GetType("ToolGood.Words.Pinyin.PinyinMatch");
             NewPinyinMatch();
 
-            _wordsHelperType = assembly.GetType("ToToolGood.Words.Pinyin.WordsHelper");
+            _wordsHelperType = assembly.GetType("ToolGood.Words.Pinyin.WordsHelper");
             NewWordsHelper();
         }
     }
@@ -65,7 +66,8 @@ public class PinYin
         {
             SetKeywordsMethod = setKeywordsMethod,
             FindIndexMethod = findIndexMethod,
-            Instance = instance
+            Instance = instance,
+            FindMethod = _pinyinMatchType.GetMethod("Find", new[] { typeof(string) })
         };
     }
 
@@ -89,11 +91,13 @@ public class PinyinMatch
     public MethodInfo FindIndexMethod { set; private get; }
     public object Instance { set; private get; }
 
+    [CanBeNull] public MethodInfo FindMethod { set; private get; }
+
     [CanBeNull] private List<string> _keywords = null;
 
 
     [CanBeNull]
-    public List<string> Find(string key)
+    public List<string> FindPinyin(string key)
     {
         if (_keywords == null || !_keywords.Any()) return null;
 
@@ -125,6 +129,19 @@ public class PinyinMatch
                 SetKeywordsMethod.Invoke(Instance, new object[] { keywords });
             }
         }
+    }
+
+    [CanBeNull]
+    public List<string> Find(string key)
+    {
+        if (FindMethod == null) return null;
+        return (List<string>)FindMethod.Invoke(Instance, new object[] { key });
+    }
+
+    public List<int> FindIndex(string key)
+    {
+        if (FindIndexMethod == null) return null;
+        return (List<int>)FindIndexMethod.Invoke(Instance, new object[] { key });
     }
 }
 
@@ -167,7 +184,7 @@ public class WordsHelper
     /// <returns></returns>
     public bool? HasChinese(string content)
     {
-        if (HasChineseMethod == null) return false;
+        if (HasChineseMethod == null) return null;
         return (bool?)HasChineseMethod.Invoke(null, new object[] { content });
     }
 

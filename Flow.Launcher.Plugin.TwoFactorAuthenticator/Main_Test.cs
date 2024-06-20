@@ -1,7 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Reflection;
 using System.Text;
 using System.Web;
 using Flow.Launcher.Plugin.TwoFactorAuthenticator.Migration;
+using JetBrains.Annotations;
 
 namespace Flow.Launcher.Plugin.TwoFactorAuthenticator;
 
@@ -12,8 +16,91 @@ public class Main_Test
     // PS private info 
     public static void Main()
     {
-        resolveUrl1();
-        resolveUrl2();
+        // var resultList = ToolGood.Words.Pinyin.WordsHelper.GetPinyinList(content);
+        pinyin();
+        // pinyinMatch();
+        // reflectionTest();
+        // resolveUrl1();
+        // resolveUrl2();
+    }
+
+    private static void pinyin()
+    {
+        var appData = Environment.GetEnvironmentVariable("LOCALAPPDATA");
+        var flowPath = appData + @"\FlowLauncher\app-1.18.0\";
+        PinYin.InitPinyinLib(flowPath);
+        PinYin.PinyinMatch?.SetKeywords(new List<string> { "东涌", "南基" });
+
+        var matchResult1 = PinYin.PinyinMatch?.Find("dong");
+        Console.WriteLine(matchResult1);
+        if (matchResult1 != null)
+        {
+            foreach (var s in matchResult1)
+            {
+                Console.WriteLine(s);
+                Console.WriteLine(s.Length);
+            }
+        }
+    }
+
+
+    private static void pinyinMatch()
+    {
+        var appData = Environment.GetEnvironmentVariable("LOCALAPPDATA");
+        var dllPath = appData + @"\FlowLauncher\app-1.18.0\ToolGood.Words.Pinyin.dll";
+        var assembly = Assembly.LoadFile(dllPath);
+        var pinyinMatchType = assembly.GetType("ToolGood.Words.Pinyin.PinyinMatch");
+        Console.WriteLine("pinyinMatchType = " + pinyinMatchType);
+        if (pinyinMatchType != null)
+        {
+            var methodInfos = pinyinMatchType.GetMethods();
+            foreach (var methodInfo in methodInfos)
+            {
+                Console.WriteLine(methodInfo);
+            }
+
+            var setKeywordsMethod = pinyinMatchType.GetMethod("SetKeywords", new[] { typeof(ICollection<string>) });
+            Console.WriteLine("setKeywordsMethod = " + setKeywordsMethod);
+            var instance = Activator.CreateInstance(pinyinMatchType);
+            setKeywordsMethod.Invoke(instance, new object[] { new List<string> { "爱", "你" } });
+        }
+    }
+
+    private static void reflectionTest()
+    {
+        var appData = Environment.GetEnvironmentVariable("LOCALAPPDATA");
+        var dllPath = appData + @"\FlowLauncher\app-1.18.0\ToolGood.Words.Pinyin.dll";
+        var assembly = Assembly.LoadFile(dllPath);
+        var wordsHelperType = assembly.GetType("ToolGood.Words.Pinyin.WordsHelper");
+        Console.WriteLine("wordsHelperType: " + wordsHelperType);
+        if (wordsHelperType != null)
+        {
+            // var methodInfos = wordsHelperType.GetMethods();
+            // foreach (var methodInfo in methodInfos)
+            // {
+            //     Console.WriteLine(methodInfo);
+            // }
+
+
+            var method = wordsHelperType.GetMethod("HasChinese", new[] { typeof(string) });
+            Console.WriteLine("method: " + method);
+            if (method != null)
+            {
+                var result = method.Invoke(null, new object[] { "爱你" });
+                Console.WriteLine(result);
+            }
+
+
+            Console.WriteLine("---------------");
+            var getPinyin = wordsHelperType.GetMethod("GetPinyin", new[] { typeof(string), typeof(bool) });
+            Console.WriteLine("GetPinyin: method is null = " + (getPinyin == null));
+            if (getPinyin != null)
+            {
+                var result = getPinyin.Invoke(null, new object[] { "爱你", false });
+                Console.WriteLine("GetAllPinyin Result:" + result);
+                Console.WriteLine("GetAllPinyin Result:" + (result == null));
+            }
+        }
     }
 
 

@@ -18,11 +18,30 @@ namespace Flow.Launcher.Plugin.TwoFactorAuthenticator
         {
             _context = context;
             _settings = context.API.LoadSettingJsonStorage<Settings>();
+
+            PinYin.InitPinyinLib();
+        }
+
+        private void TestPinYin(string key)
+        {
+            _context.API.LogInfo("TestPinYin", $"${_context.CurrentPluginMetadata.ExecuteFilePath}");
+            _context.API.LogInfo("TestPinYin", $"""key: {key}""");
+            try
+            {
+                Type type = Type.GetType("ToolGood.Words.Pinyin.WordsHelper");
+                _context.API.LogInfo("TestPinYin", $"type: ${type is null}. ${type}");
+            }
+            catch (Exception e)
+            {
+                _context.API.LogException("TestPinYin", e.Message, e);
+            }
         }
 
         public List<Result> Query(Query query)
         {
             var search = query.Search.TrimStart();
+
+            TestPinYin(search);
 
             var result = _settings.OtpParams
                 .Select(param => SelectOtpParam(param, search))

@@ -93,13 +93,13 @@ public class PinyinMatch
 
     [CanBeNull] public MethodInfo FindMethod { set; private get; }
 
-    [CanBeNull] private List<string> _keywords = null;
+    private List<string> _keywords = new();
 
 
     [CanBeNull]
     public List<string> FindPinyin(string key)
     {
-        if (_keywords == null || !_keywords.Any()) return null;
+        if (!_keywords.Any()) return null;
 
         var indies = (List<int>)FindIndexMethod.Invoke(Instance, new object[] { key });
         if (indies == null) return null;
@@ -112,22 +112,12 @@ public class PinyinMatch
         if (force)
         {
             _keywords = keywords.ToList();
-
-            if (keywords == null || keywords.Any())
-            {
-                SetKeywordsMethod.Invoke(Instance, new object[] { new List<string>() });
-            }
-            else
-            {
-            }
+            SetKeywordsMethod.Invoke(Instance, new object[] { _keywords });
         }
-        else
+        else if (!_keywords.Any())
         {
-            if (_keywords == null || !_keywords.Any())
-            {
-                _keywords = keywords?.ToList();
-                SetKeywordsMethod.Invoke(Instance, new object[] { keywords });
-            }
+            _keywords = keywords.ToList();
+            SetKeywordsMethod.Invoke(Instance, new object[] { keywords });
         }
     }
 

@@ -30,22 +30,33 @@ public class Main_Test
         PinYin.InitPinyinLib($@"{appData}\FlowLauncher\app-1.18.0\");
 
 
-        Console.WriteLine(PinYin.WordsHelper?.HasChinese("-asdfajadf-"));
-        Console.WriteLine(PinYin.WordsHelper?.HasChinese("-asdfn这ajadf-"));
+        PinYin.PinyinMatch.SetKeywords(new List<string>() { "主要Github", "开源G" });
 
 
-        PinYin.PinyinMatch?.SetKeywords(new List<string> { "东 涌堡垒机", "南基" });
-
-        var matchResult1 = PinYin.PinyinMatch?.Find("dong y");
-        Console.WriteLine(matchResult1);
-        if (matchResult1 != null)
+        var find = PinYin.PinyinMatch.Find("zy");
+        foreach (var se in find)
         {
-            foreach (var s in matchResult1)
-            {
-                Console.WriteLine(s);
-                Console.WriteLine(s.Length);
-            }
+            Console.WriteLine("Find: " + se);
+            Console.WriteLine(String.Equals("主要Github", se));
         }
+
+        //
+        // Console.WriteLine();
+        // Console.WriteLine(PinYin.WordsHelper?.HasChinese("-asdfn这ajadf-"));
+        //
+        //
+        // PinYin.PinyinMatch?.SetKeywords(new List<string> { "东 涌堡垒机", "南基" });
+        //
+        // var matchResult1 = PinYin.PinyinMatch?.Find("dong y");
+        // Console.WriteLine(matchResult1);
+        // if (matchResult1 != null)
+        // {
+        //     foreach (var s in matchResult1)
+        //     {
+        //         Console.WriteLine(s);
+        //         Console.WriteLine(s.Length);
+        //     }
+        // }
     }
 
 

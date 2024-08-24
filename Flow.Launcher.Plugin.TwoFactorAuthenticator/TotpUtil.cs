@@ -9,11 +9,31 @@ namespace Flow.Launcher.Plugin.TwoFactorAuthenticator;
 
 public class TotpUtil
 {
-    private static readonly DateTime _epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+    private static readonly DateTime Epoch = new(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
     private static long GetCurrentCounter(DateTime now, DateTime epoch, int timeStep)
     {
-        return (long)(now - epoch).TotalSeconds / (long)timeStep;
+        return (long)(now - epoch).TotalSeconds / timeStep;
+    }
+
+
+    public static long GetCurrentCounter()
+    {
+        // default time step is 30
+        return (long)(DateTime.UtcNow - Epoch).TotalSeconds / 30;
+    }
+
+    public static long GetRemainingSeconds()
+    {
+        var time = (long)(DateTime.UtcNow - Epoch).TotalSeconds - GetCurrentCounter() * 30;
+        // return time switch
+        // {
+        //     <= 0 => 0,
+        //     >= 30 => 30,
+        //     _ => time
+        // };
+        var r = 30 - time;
+        return r < 0 ? 0 : r;
     }
 
 
@@ -22,7 +42,19 @@ public class TotpUtil
         return GenerateTOTPPinCode(param.Algorithm, param.Secret, true, param.Digits);
     }
 
+    public static string GenerateTOTPPinCode(OtpParam param, long counter)
+    {
+        return GenerateTOTPPinCode(param.Algorithm, param.Secret, counter, true, param.Digits);
+    }
+
     public static string GenerateTOTPPinCode(string algorithm, string secret, bool secretIsBase32 = true,
+        int digits = 6)
+    {
+        return GenerateTOTPPinCode(algorithm, secret, GetCurrentCounter(DateTime.UtcNow, Epoch, 30), secretIsBase32,
+            digits);
+    }
+
+    public static string GenerateTOTPPinCode(string algorithm, string secret, long counter, bool secretIsBase32 = true,
         int digits = 6)
     {
         var tfa = algorithm == null
@@ -36,8 +68,7 @@ public class TotpUtil
         // }
 
         // Digits == 8
-        return tfa.GeneratePINAtInterval(secret, GetCurrentCounter(DateTime.UtcNow, _epoch, 30), digits,
-            secretIsBase32);
+        return tfa.GeneratePINAtInterval(secret, counter, digits, secretIsBase32);
     }
 
 

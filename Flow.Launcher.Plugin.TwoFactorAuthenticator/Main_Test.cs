@@ -16,6 +16,8 @@ public class Main_Test
     // PS private info 
     public static void Main()
     {
+        // Console.WriteLine(TotpUtil.GetCurrentCounter());
+
         // var resultList = ToolGood.Words.Pinyin.WordsHelper.GetPinyinList(content);
         pinyin();
         // pinyinMatch();
@@ -26,18 +28,24 @@ public class Main_Test
 
     private static void pinyin()
     {
+        var version = "app-1.19.0";
+        // var version = "app-1.18.0";
         var appData = Environment.GetEnvironmentVariable("LOCALAPPDATA");
-        PinYin.InitPinyinLib($@"{appData}\FlowLauncher\app-1.18.0\");
+        // PinYin.InitPinyinLib($@"{appData}\FlowLauncher\app-1.18.0\");
+        PinYin.InitPinyinLib($@"{appData}\FlowLauncher\{version}\");
 
 
         PinYin.PinyinMatch.SetKeywords(new List<string>() { "主要Github", "开源G" });
 
 
         var find = PinYin.PinyinMatch.Find("zy");
-        foreach (var se in find)
+        if (find != null)
         {
-            Console.WriteLine("Find: " + se);
-            Console.WriteLine(String.Equals("主要Github", se));
+            foreach (var se in find)
+            {
+                Console.WriteLine("Find: " + se);
+                Console.WriteLine(String.Equals("主要Github", se));
+            }
         }
 
         //
@@ -165,7 +173,7 @@ public class Main_Test
     public static void resolveUrl1()
     {
         var url =
-            "otpauth-migration://offline?data=";
+            "otpauth-migration://offline?data=CkEKEA6I%2F4YnkXBCAagKthidbJASIFZ1bHRyOnN5dXN1a2V6aGFuZ3lvbmdAZ21haWwuY29tGgVWdWx0ciABKAEwAhABGAEgACjauNqGAw%3D%3D";
 
         var m1List = OtpMigrationUtil.ParseOtpMigration(url);
 

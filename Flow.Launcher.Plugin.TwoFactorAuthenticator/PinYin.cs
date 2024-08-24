@@ -12,8 +12,8 @@ public class PinYin
     private static Type _pinyinMatchType;
     private static Type _wordsHelperType;
 
-    [CanBeNull] public static PinyinMatch PinyinMatch { get; private set; }
-    [CanBeNull] public static WordsHelper WordsHelper { get; private set; }
+    public static IPinyinMatch PinyinMatch { get; private set; }
+    public static IWordsHelper WordsHelper { get; private set; }
 
     public static void InitPinyinLib()
     {
@@ -27,15 +27,39 @@ public class PinYin
      */
     public static void InitPinyinLib(string flowBaseDir)
     {
+        IPinyinMatch pinyinMatch = null;
+        IWordsHelper wordsHelper = null;
+
         var dllPath = flowBaseDir + "ToolGood.Words.Pinyin.dll";
         if (File.Exists(dllPath))
         {
-            var assembly = Assembly.LoadFile(dllPath);
-            _pinyinMatchType = assembly.GetType("ToolGood.Words.Pinyin.PinyinMatch");
-            NewPinyinMatch();
+            try
+            {
+                var assembly = Assembly.LoadFile(dllPath);
+                _pinyinMatchType = assembly.GetType("ToolGood.Words.Pinyin.PinyinMatch");
+                _wordsHelperType = assembly.GetType("ToolGood.Words.Pinyin.WordsHelper");
 
-            _wordsHelperType = assembly.GetType("ToolGood.Words.Pinyin.WordsHelper");
-            NewWordsHelper();
+                if (_pinyinMatchType != null && _wordsHelperType != null)
+                {
+                    pinyinMatch = NewPinyinMatch();
+                    wordsHelper = NewWordsHelper();
+                }
+            }
+            catch (Exception e)
+            {
+                // Console.WriteLine(e);
+            }
+        }
+
+        if (pinyinMatch != null && wordsHelper != null)
+        {
+            PinyinMatch = pinyinMatch;
+            WordsHelper = wordsHelper;
+        }
+        else
+        {
+            PinyinMatch = new NonePinyinMatch();
+            WordsHelper = new NoneWordsHelper();
         }
     }
 
@@ -48,21 +72,20 @@ public class PinYin
     }
 
 
-    public static void NewPinyinMatch()
+    [CanBeNull]
+    public static IPinyinMatch NewPinyinMatch()
     {
-        if (_pinyinMatchType == null) return;
-
         var setKeywordsMethod = _pinyinMatchType.GetMethod("SetKeywords", new[] { typeof(ICollection<string>) });
-        if (setKeywordsMethod == null) return;
+        if (setKeywordsMethod == null) return null;
 
         var findIndexMethod = _pinyinMatchType.GetMethod("FindIndex", new[] { typeof(string) });
-        if (findIndexMethod == null) return;
-        if (findIndexMethod.ReturnType != typeof(List<int>)) return;
+        if (findIndexMethod == null) return null;
+        if (findIndexMethod.ReturnType != typeof(List<int>)) return null;
 
         var instance = Activator.CreateInstance(_pinyinMatchType);
-        if (instance == null) return;
+        if (instance == null) return null;
 
-        PinyinMatch = new PinyinMatch
+        return new FlowReflectionPinyinMatch
         {
             SetKeywordsMethod = setKeywordsMethod,
             FindIndexMethod = findIndexMethod,
@@ -71,11 +94,10 @@ public class PinYin
         };
     }
 
-    public static void NewWordsHelper()
+    [CanBeNull]
+    public static IWordsHelper NewWordsHelper()
     {
-        if (_wordsHelperType == null) return;
-
-        WordsHelper = new WordsHelper
+        return new FlowReflectionWordsHelper
         {
             GetPinyinMethod = _wordsHelperType.GetMethod("GetPinyin", new[] { typeof(string), typeof(bool) }),
             GetFirstPinyinMethod = _wordsHelperType.GetMethod("GetFirstPinyin", new[] { typeof(string) }),
@@ -85,7 +107,44 @@ public class PinYin
     }
 }
 
-public class PinyinMatch
+public interface IPinyinMatch
+{
+    [CanBeNull]
+    public List<string> FindPinyin(string key);
+
+    public void SetKeywords(ICollection<string> keywords, bool force = false);
+
+    [CanBeNull]
+    public List<string> Find(string key);
+
+    [CanBeNull]
+    public List<int> FindIndex(string key);
+}
+
+class NonePinyinMatch : IPinyinMatch
+{
+    public List<string> FindPinyin(string key)
+    {
+        return null;
+    }
+
+    public void SetKeywords(ICollection<string> keywords, bool force = false)
+    {
+    }
+
+
+    public List<string> Find(string key)
+    {
+        return null;
+    }
+
+    public List<int> FindIndex(string key)
+    {
+        return null;
+    }
+}
+
+public class FlowReflectionPinyinMatch : IPinyinMatch
 {
     public MethodInfo SetKeywordsMethod { set; private get; }
     public MethodInfo FindIndexMethod { set; private get; }
@@ -96,7 +155,6 @@ public class PinyinMatch
     private List<string> _keywords = new();
 
 
-    [CanBeNull]
     public List<string> FindPinyin(string key)
     {
         if (!_keywords.Any()) return null;
@@ -121,7 +179,6 @@ public class PinyinMatch
         }
     }
 
-    [CanBeNull]
     public List<string> Find(string key)
     {
         if (FindMethod == null) return null;
@@ -135,7 +192,45 @@ public class PinyinMatch
     }
 }
 
-public class WordsHelper
+public interface IWordsHelper
+{
+    [CanBeNull]
+    public string GetPinyin(string text, bool tone = false);
+
+    [CanBeNull]
+    public string GetFirstPinyin(string text);
+
+    [CanBeNull]
+    public bool? HasChinese(string content);
+
+    [CanBeNull]
+    public bool? IsAllChinese(string content);
+}
+
+class NoneWordsHelper : IWordsHelper
+{
+    public string GetPinyin(string text, bool tone = false)
+    {
+        return null;
+    }
+
+    public string GetFirstPinyin(string text)
+    {
+        return null;
+    }
+
+    public bool? HasChinese(string content)
+    {
+        return null;
+    }
+
+    public bool? IsAllChinese(string content)
+    {
+        return null;
+    }
+}
+
+public class FlowReflectionWordsHelper : IWordsHelper
 {
     [CanBeNull] public MethodInfo GetPinyinMethod { set; private get; }
     [CanBeNull] public MethodInfo GetFirstPinyinMethod { set; private get; }

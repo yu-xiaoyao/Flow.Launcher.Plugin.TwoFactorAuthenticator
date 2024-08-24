@@ -57,29 +57,24 @@ public class OtpAuthUtil
         return true;
     }
 
-    public static bool ValidHotpParam(OtpParam param)
-    {
-        if (!ValidOtpParam(param))
-            return false;
-
-        if (param.OtpType != OtpParam.HotpType) return false;
-
-        //TODO valid ...
-        return false;
-    }
-
 
     [CanBeNull]
-    public static OtpParam ResolveOtpAuthUrl(string url)
+    public static List<OtpParam> AnalyzeOtpAuthUrl(string url)
     {
         if (url.StartsWith("otpauth://"))
         {
             var res = ParserOtpAuthUrl(url);
-            return res;
+            return res == null ? null : new List<OtpParam>() { res };
+        }
+
+        if (url.StartsWith("otpauth-migration://"))
+        {
+            return OtpMigrationUtil.ParseOtpMigration(url);
         }
 
         return null;
     }
+
 
     [CanBeNull]
     public static OtpParam ParserOtpAuthUrl(string url)
@@ -126,52 +121,79 @@ public class OtpAuthUtil
         return null;
     }
 
-
-    [CanBeNull]
-    public static List<OtpParam> ResolveOtpAuthMigrationUrl(string url)
+    public static string GenerateOtpAuthUrlShare(OtpParam param)
     {
-        if (url.StartsWith("otpauth-migration://"))
-        {
-            return OtpMigrationUtil.ParseOtpMigration(url);
-        }
-
-        return null;
+        return $"otpauth://{param.OtpType}/{param.Issuer}:{param.Name}?secret={param.Secret}&issuer={param.Issuer}";
     }
 
 
-    /// <summary>
-    /// 生成分享二维码
-    /// </summary>
-    /// <param name="model"></param>
-    /// <returns></returns>
-    public static byte[] CreateQRCode(OtpParam model)
+    public static bool ValidHotpParam(OtpParam param)
     {
-        // return CreateTotpQRCode(totp.Issuer, totp.AccountTitle, totp.Secret, totp.Algorithm);
-        return null;
+        if (!ValidOtpParam(param))
+            return false;
+
+        if (param.OtpType != OtpParam.HotpType) return false;
+
+        //TODO valid ...
+        return false;
     }
 
-    /// <summary>
-    /// 创建TOTP二维码
-    /// </summary>
-    /// <param name="issuer"></param>
-    /// <param name="accountTitle"></param>
-    /// <param name="secret"></param>
-    /// <param name="algorithm"></param>
-    /// <param name="qrPixel"></param>
-    /// <returns></returns>
-    public static byte[] CreateTotpQRCode(string issuer, string accountTitle, string secret,
-        [CanBeNull] string algorithm,
-        int qrPixel = 20)
-    {
-        var tfa = algorithm == null
-            ? new GoogleTwoFactorAuthenticator()
-            : new GoogleTwoFactorAuthenticator(TotpUtil.ResolveHashTypeAlgorithm(algorithm));
 
-        var setupCode = tfa.GenerateSetupCode(issuer, accountTitle, secret, true, qrPixel);
+    // [CanBeNull]
+    // public static OtpParam ResolveOtpAuthUrl(string url)
+    // {
+    //     if (url.StartsWith("otpauth://"))
+    //     {
+    //         var res = ParserOtpAuthUrl(url);
+    //         return res;
+    //     }
+    //
+    //     return null;
+    // }
 
-        var baseImageData = setupCode.QrCodeSetupImageUrl;
-        var imageData = baseImageData["data:image/png;base64,".Length..];
+    // [CanBeNull]
+    // public static List<OtpParam> ResolveOtpAuthMigrationUrl(string url)
+    // {
+    //     if (url.StartsWith("otpauth-migration://"))
+    //     {
+    //         return OtpMigrationUtil.ParseOtpMigration(url);
+    //     }
+    //
+    //     return null;
+    // }
 
-        return Convert.FromBase64String(imageData);
-    }
+    // /// <summary>
+    // /// 生成分享二维码
+    // /// </summary>
+    // /// <param name="totp"></param>
+    // /// <returns></returns>
+    // public static byte[] CreateQRCode(OtpParam totp)
+    // {
+    //     return CreateTotpQRCode(totp.Issuer, totp.Name, totp.Secret, totp.Algorithm);
+    // }
+    //
+    // /// <summary>
+    // /// 创建TOTP二维码
+    // /// </summary>
+    // /// <param name="issuer"></param>
+    // /// <param name="na"></param>
+    // /// <param name="secret"></param>
+    // /// <param name="algorithm"></param>
+    // /// <param name="qrPixel"></param>
+    // /// <returns></returns>
+    // public static byte[] CreateTotpQRCode(string issuer, string name, string secret,
+    //     [CanBeNull] string algorithm,
+    //     int qrPixel = 20)
+    // {
+    //     var tfa = algorithm == null
+    //         ? new GoogleTwoFactorAuthenticator()
+    //         : new GoogleTwoFactorAuthenticator(TotpUtil.ResolveHashTypeAlgorithm(algorithm));
+    //
+    //     var setupCode = tfa.GenerateSetupCode(issuer, name, secret, true, qrPixel);
+    //
+    //     var baseImageData = setupCode.QrCodeSetupImageUrl;
+    //     var imageData = baseImageData["data:image/png;base64,".Length..];
+    //
+    //     return Convert.FromBase64String(imageData);
+    // }
 }

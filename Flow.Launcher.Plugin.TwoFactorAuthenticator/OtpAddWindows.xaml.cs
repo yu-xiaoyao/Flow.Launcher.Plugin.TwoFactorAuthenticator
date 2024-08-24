@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
@@ -40,7 +41,9 @@ public partial class OtpAddWindows : Window
     {
         // type
         ComboBoxOtpType.Items.Add(OtpParam.TotpType);
-        ComboBoxOtpType.Items.Add(OtpParam.HotpType);
+
+        //TODO HOTP not support
+        // ComboBoxOtpType.Items.Add(OtpParam.HotpType);
 
         ComboBoxDigits.Items.Add("6");
         ComboBoxDigits.Items.Add("8");
@@ -99,6 +102,48 @@ public partial class OtpAddWindows : Window
         }
     }
 
+
+    private void ImportQrCodeFile_Click(object sender, RoutedEventArgs e)
+    {
+        TextBlockTip.Text = "";
+
+        var ofd = new OpenFileDialog
+        {
+            Filter = "Image Files |*.png;*.jpg;*.jpeg|All Files (*.*)|*.*",
+            ShowReadOnly = true,
+            Multiselect = false
+        };
+
+
+        var showDialog = ofd.ShowDialog();
+        if (showDialog is not true) return;
+
+        var fileName = ofd.FileName;
+        if (!File.Exists(fileName)) return;
+
+        var bitmap = new Bitmap(fileName);
+
+        string result;
+        try
+        {
+            result = QrCodeUtil.ResolveQrCode(bitmap);
+        }
+        catch (Exception exception)
+        {
+            TextBlockTip.Text = $"Invalid QRCode File. exception: {exception.Message}";
+            return;
+        }
+
+        var param = OtpAuthUtil.AnalyzeOtpAuthUrl(result);
+        if (param == null || !param.Any())
+        {
+            TextBlockTip.Text = $"Invalid QRCode Data: {result}";
+            return;
+        }
+
+        SetDataView(param);
+    }
+
     private void ImportClipboard_Click(object sender, RoutedEventArgs e)
     {
         string result = null;
@@ -130,42 +175,8 @@ public partial class OtpAddWindows : Window
 
         if (result == null) return;
 
-        var param = OtpAuthUtil.ResolveOtpAuthUrl(result);
-
-        if (param == null)
-            return;
-
-        SetDataView(param);
-    }
-
-    private void ImportQrCodeBtn_Click(object sender, RoutedEventArgs e)
-    {
-        TextBlockTip.Text = "";
-
-        var dialog = new OpenFileDialog
-        {
-            Filter = "Image Files |*.png;*.jpg;*.jpeg|All Files (*.*)|*.*",
-            ShowReadOnly = true,
-            Multiselect = false
-        };
-        var show = dialog.ShowDialog();
-        if (show is not true) return;
-
-        var file = dialog.FileName;
-        ReadQrCodeFile(file);
-    }
-
-    private void ReadQrCodeFile(string filePath)
-    {
-        var result = QrCodeUtil.ResolveQrCodeFile(filePath);
-        if (result == null)
-        {
-            TextBlockTip.Text = "Invalid QRCode File";
-            return;
-        }
-
-        var param = OtpAuthUtil.ResolveOtpAuthUrl(result);
-        if (param == null)
+        var param = OtpAuthUtil.AnalyzeOtpAuthUrl(result);
+        if (param == null || !param.Any())
         {
             TextBlockTip.Text = $"Invalid QRCode Data: {result}";
             return;
@@ -174,8 +185,15 @@ public partial class OtpAddWindows : Window
         SetDataView(param);
     }
 
-    private void SetDataView(OtpParam param)
+    private void SetDataView(List<OtpParam> paramList)
     {
+        if (paramList.Count > 1)
+        {
+            TextBlockTip.Text = $"Current Data Only Support One. Count: {paramList.Count}";
+            return;
+        }
+
+        var param = paramList[0];
         if (param.Algorithm != null)
         {
             HashType hashType;

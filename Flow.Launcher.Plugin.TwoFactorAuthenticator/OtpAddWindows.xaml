@@ -9,7 +9,7 @@
     <StackPanel>
 
         <StackPanel Orientation="Horizontal" Margin="10" HorizontalAlignment="Left">
-            <Button Width="220" Margin="5 0 0 0" Name="ImportQrCodeBtn" Click="ImportQrCodeBtn_Click">Import From QRCode File</Button>
+            <Button Width="220" Margin="5 0 0 0" Name="ImportQrCodeBtn" Click="ImportQrCodeFile_Click">Import From QRCode File</Button>
             <Button Width="180" Margin="5 0 0 0" Name="ImportClipboard" Click="ImportClipboard_Click">Import From Clipboard</Button>
         </StackPanel>
 

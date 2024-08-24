@@ -9,13 +9,39 @@
 
 
     <StackPanel Orientation="Vertical">
-        <StackPanel Orientation="Horizontal" Margin="10">
-            <Button Margin="4" Click="Otp_Add_Click">Add</Button>
-            <Button Margin="4" Click="Otp_Export_Json">Export</Button>
-            <Button Margin="4" Click="Otp_Import_Json">Import</Button>
-            <Button Margin="4" Click="Import_OTP_Migration_From_QrFile">OTP Migration QR File</Button>
-            <Button Margin="4" Click="Import_OTP_Migration_From_Clipboard">OTP Migration URL(Clipboard)</Button>
-            <Button Margin="4" Click="Save_Settings">Save Settings</Button>
+
+        <StackPanel Orientation="Horizontal" Margin="5" HorizontalAlignment="Left">
+            <CheckBox x:Name="CheckBoxCopyNotification" MinWidth="200"
+                      Checked="CheckBoxCopyNotification_Checked_Changed"
+                      Unchecked="CheckBoxCopyNotification_Checked_Changed"
+                      Content="Show Copy Notification" />
+
+            <CheckBox x:Name="CheckBoxEnablePinyin" MinWidth="200"
+                      Checked="CheckBoxEnablePinyin_Checked_Changed"
+                      Unchecked="CheckBoxEnablePinyin_Checked_Changed"
+                      Content="Enable Pinyin Search" />
+
+
+            <CheckBox x:Name="CheckBoxEnableSearchName" MinWidth="200"
+                      Checked="CheckBoxEnableSearchName_Checked_Changed"
+                      Unchecked="CheckBoxEnableSearchName_Checked_Changed"
+                      Content="Is Search Name" />
+
+
+            <CheckBox x:Name="CheckBoxEnableSearchIssuer" MinWidth="200"
+                      Checked="CheckBoxEnableSearchIssuer_Checked_Changed"
+                      Unchecked="CheckBoxEnableSearchIssuer_Checked_Changed"
+                      Content="Is Search Issuer" />
+
+        </StackPanel>
+
+        <StackPanel Orientation="Horizontal" Margin="5" HorizontalAlignment="Left">
+            <Button Margin="4" Click="Otp_Add_Click">Add OTP</Button>
+            <Button Margin="4" Click="ImportQrCodeFile_Click">Import From QRCode File</Button>
+            <Button Margin="4" Click="ImportClipboard_Click">Import From Clipboard URL</Button>
+            <Button Margin="4" MinWidth="100" Click="Otp_Import_Json">Import All</Button>
+            <Button Margin="4" MinWidth="100" Click="Otp_Export_Json">Export All</Button>
+            <Button Margin="4" MinWidth="100" Click="Save_Settings">Save All Settings</Button>
         </StackPanel>
 
         <StackPanel Margin="10 0 10 10" Height="180">

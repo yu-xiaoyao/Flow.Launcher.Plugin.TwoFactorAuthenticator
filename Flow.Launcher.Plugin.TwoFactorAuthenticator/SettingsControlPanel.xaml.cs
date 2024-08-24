@@ -42,6 +42,11 @@ namespace Flow.Launcher.Plugin.TwoFactorAuthenticator
                 WriteIndented = true // 換行與縮排
             };
 
+            CheckBoxCopyNotification.IsChecked = _settings.CopyNotification;
+            CheckBoxEnablePinyin.IsChecked = _settings.PinyinSearch;
+            CheckBoxEnableSearchName.IsChecked = _settings.SearchName;
+            CheckBoxEnableSearchIssuer.IsChecked = _settings.SearchIssuer;
+
             TotpDataGrid.IsReadOnly = true;
             TotpDataGrid.ItemsSource = _settings.OtpParams;
             AddTotpContextMenu();
@@ -65,7 +70,7 @@ namespace Flow.Launcher.Plugin.TwoFactorAuthenticator
             ExportTotpJsonFile(_settings.OtpParams.ToList());
         }
 
-        private void Import_OTP_Migration_From_QrFile(object sender, RoutedEventArgs e)
+        private void ImportQrCodeFile_Click(object sender, RoutedEventArgs e)
         {
             var ofd = new OpenFileDialog
             {
@@ -80,19 +85,19 @@ namespace Flow.Launcher.Plugin.TwoFactorAuthenticator
             var fileName = ofd.FileName;
             if (!File.Exists(fileName)) return;
 
-            var otpMigration = QrCodeUtil.ResolveQrCodeFile(fileName);
-            AddOtpAuthMigration(otpMigration);
+            var result = QrCodeUtil.ResolveQrCodeFile(fileName);
+            AnalyzeUrlAndAddOtp(result);
         }
 
-        private void Import_OTP_Migration_From_Clipboard(object sender, RoutedEventArgs e)
+        private void ImportClipboard_Click(object sender, RoutedEventArgs e)
         {
-            string otpMigration = null;
+            string result = null;
             if (Clipboard.ContainsImage())
             {
                 var bitmap = QrCodeUtil.GetBitmap(Clipboard.GetImage());
                 if (bitmap != null)
                 {
-                    otpMigration = QrCodeUtil.ResolveQrCode(bitmap);
+                    result = QrCodeUtil.ResolveQrCode(bitmap);
                 }
             }
             else if (Clipboard.ContainsFileDropList())
@@ -104,23 +109,25 @@ namespace Flow.Launcher.Plugin.TwoFactorAuthenticator
                     var file = fileDropList[0];
                     if (file != null && (file.EndsWith(".png") || file.EndsWith(".jpg") || file.EndsWith(".jpeg")))
                     {
-                        otpMigration = QrCodeUtil.ResolveQrCodeFile(file);
+                        result = QrCodeUtil.ResolveQrCodeFile(file);
                     }
                 }
             }
             else if (Clipboard.ContainsText(TextDataFormat.Text))
             {
-                otpMigration = Clipboard.GetText(TextDataFormat.Text);
+                result = Clipboard.GetText(TextDataFormat.Text);
             }
 
-            AddOtpAuthMigration(otpMigration);
+            AnalyzeUrlAndAddOtp(result);
         }
 
-        private void AddOtpAuthMigration([CanBeNull] string otpMigration)
+        private void AnalyzeUrlAndAddOtp([CanBeNull] string resultUrl)
         {
-            if (string.IsNullOrWhiteSpace(otpMigration)) return;
+            // _context.API.LogInfo("ControlPanel", $"resultUrl = {resultUrl}");
 
-            var otpParams = OtpAuthUtil.ResolveOtpAuthMigrationUrl(otpMigration);
+            if (string.IsNullOrWhiteSpace(resultUrl)) return;
+
+            var otpParams = OtpAuthUtil.AnalyzeOtpAuthUrl(resultUrl);
             if (otpParams is not { Count: > 0 }) return;
             foreach (var otpParam in otpParams)
             {
@@ -349,6 +356,54 @@ namespace Flow.Launcher.Plugin.TwoFactorAuthenticator
                 },
                 StaysOpen = true
             };
+        }
+
+        private void CheckBoxCopyNotification_Checked_Changed(object sender, RoutedEventArgs e)
+        {
+            bool select;
+            if (CheckBoxCopyNotification.IsChecked == null)
+                select = false;
+            else
+                select = (bool)CheckBoxCopyNotification.IsChecked!;
+
+            // _context.API.LogInfo("Setting", "copyNotification = " + select);
+            _settings.CopyNotification = select;
+        }
+
+        private void CheckBoxEnablePinyin_Checked_Changed(object sender, RoutedEventArgs e)
+        {
+            bool select;
+            if (CheckBoxEnablePinyin.IsChecked == null)
+                select = false;
+            else
+                select = (bool)CheckBoxEnablePinyin.IsChecked!;
+
+            // _context.API.LogInfo("Setting", "pyniniSearch = " + select);
+            _settings.PinyinSearch = select;
+        }
+
+        private void CheckBoxEnableSearchName_Checked_Changed(object sender, RoutedEventArgs e)
+        {
+            bool select;
+            if (CheckBoxEnableSearchName.IsChecked == null)
+                select = false;
+            else
+                select = (bool)CheckBoxEnableSearchName.IsChecked!;
+
+            // _context.API.LogInfo("Setting", "pyniniSearch = " + select);
+            _settings.SearchName = select;
+        }
+
+        private void CheckBoxEnableSearchIssuer_Checked_Changed(object sender, RoutedEventArgs e)
+        {
+            bool select;
+            if (CheckBoxEnableSearchIssuer.IsChecked == null)
+                select = false;
+            else
+                select = (bool)CheckBoxEnableSearchIssuer.IsChecked!;
+
+            // _context.API.LogInfo("Setting", "pyniniSearch = " + select);
+            _settings.SearchIssuer = select;
         }
     }
 }

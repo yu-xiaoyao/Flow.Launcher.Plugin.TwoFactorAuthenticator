@@ -5,7 +5,7 @@ Flow.Launcher.Plugin.TwoFactorAuthenticator
 
 A Two Factor Authenticator Code Generator for the [Flow launcher](https://github.com/Flow-Launcher/Flow.Launcher).
 
-# Two Factor Authenticator
+# Two Factor Authenticator/两步认证插件
 
 ## Support OTP Type
 
@@ -80,7 +80,7 @@ QR Code Image Content String Support:
 2. Open Context Menu, and Select Edit
 ![](Resources/edit-otp.png)
 
-
+> PS: After add or Edit Must Click `Save And Reload Settings`
 
 ## Google Protobuf for OTP Migration URL Protocol
 

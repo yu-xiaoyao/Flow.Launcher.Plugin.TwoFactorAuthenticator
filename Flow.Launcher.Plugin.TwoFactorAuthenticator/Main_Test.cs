@@ -32,7 +32,7 @@ public class Main_Test
         // var version = "app-1.18.0";
         var appData = Environment.GetEnvironmentVariable("LOCALAPPDATA");
         // PinYin.InitPinyinLib($@"{appData}\FlowLauncher\app-1.18.0\");
-        PinYin.InitPinyinLib($@"{appData}\FlowLauncher\{version}\");
+        PinYin.InitPinyinLib(null, $@"{appData}\FlowLauncher\{version}\");
 
 
         PinYin.PinyinMatch.SetKeywords(new List<string>() { "主要Github", "开源G" });

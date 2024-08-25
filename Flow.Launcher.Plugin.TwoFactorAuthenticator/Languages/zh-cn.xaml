@@ -5,7 +5,7 @@
                     xmlns:system="clr-namespace:System;assembly=mscorlib">
 
     <system:String x:Key="two_fa_plugin_title">两步认证插件</system:String>
-    <system:String x:Key="two_fa_plugin_description">快速生成两步认证码</system:String>
+    <system:String x:Key="two_fa_plugin_description">快速生成 TOTP 两步认证码</system:String>
 
     <system:String x:Key="two_fa_generate_share_qr_code">生成分享二维码</system:String>
     <system:String x:Key="two_fa_generate_share_string">复制分享字符串</system:String>

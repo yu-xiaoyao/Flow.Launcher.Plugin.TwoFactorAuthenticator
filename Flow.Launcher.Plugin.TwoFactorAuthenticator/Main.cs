@@ -20,12 +20,10 @@ namespace Flow.Launcher.Plugin.TwoFactorAuthenticator
         {
             _context = context;
             _settings = context.API.LoadSettingJsonStorage<Settings>();
-            PinYin.InitPinyinLib();
 
+            _settings.PinyinSearch = PinYin.InitPinyinLib(context.API);
             if (_settings.PinyinSearch)
-            {
-                LoadPinyinResult();
-            }
+                PinYin.LoadPinyinResult(_settings, _context);
         }
 
 
@@ -63,8 +61,8 @@ namespace Flow.Launcher.Plugin.TwoFactorAuthenticator
                         // mark text is match, no need to check pinyin
                         if (!hasRemark)
                         {
-                            pinyinMatch = _matchByPinyin(param.Remark, search);
                             // _context.API.LogInfo("Pinyin", $"{param.Remark} - {search}. {pinyinMatch}");
+                            pinyinMatch = _matchByPinyin(param.Remark, search);
                         }
                     }
 
@@ -128,50 +126,45 @@ namespace Flow.Launcher.Plugin.TwoFactorAuthenticator
         /// <param name="fromText"></param>
         /// <param name="search"></param>
         /// <returns></returns>
-        private static bool _matchByPinyin(string fromText, string search)
+        private bool _matchByPinyin(string fromText, string search)
         {
-            // if (PinYin.WordsHelper == null) return false;
-            // if (PinYin.PinyinMatch == null) return false;
-
-            var hasChinese = PinYin.WordsHelper.HasChinese(search);
-            switch (hasChinese)
+            try
             {
-                case null:
-                case true:
+                var hasChinese = PinYin.WordsHelper.HasChinese(search);
+                switch (hasChinese)
+                {
+                    case null:
+                    case true:
+                        return false;
+                }
+
+                // 输入 must english - pinyin
+
+                // _context.API.LogInfo("MPYAAAAA", $"{fromText} - {search}");
+
+
+                var result = PinYin.PinyinMatch.Find(search);
+
+                // foreach (var se in result)
+                // {
+                //     _context.API.LogInfo("MPY", $"{fromText} - {search}....{se}");
+                // }
+
+
+                if (result == null || !result.Any())
                     return false;
+
+
+                return result.Any(se => string.Equals(fromText, se, StringComparison.OrdinalIgnoreCase));
+            }
+            catch (Exception e)
+            {
+                _context.API.LogException("MatchByPinyin", e.Message, e);
             }
 
-            // 输入 must english - pinyin
-
-            // _context.API.LogInfo("MPYAAAAA", $"{fromText} - {search}");
-
-
-            var result = PinYin.PinyinMatch.Find(search);
-
-            // foreach (var se in result)
-            // {
-            //     _context.API.LogInfo("MPY", $"{fromText} - {search}....{se}");
-            // }
-
-
-            if (result == null || !result.Any())
-                return false;
-
-
-            return result.Any(se => string.Equals(fromText, se, StringComparison.OrdinalIgnoreCase));
+            return false;
         }
 
-        private void LoadPinyinResult()
-        {
-            if (PinYin.PinyinMatch == null) return;
-
-            var keys = _settings.OtpParams
-                .Select(o => o.Remark)
-                .Where(s => !string.IsNullOrWhiteSpace(s))
-                .ToList();
-
-            PinYin.PinyinMatch.SetKeywords(keys);
-        }
 
         #region Context Menu Event
 
@@ -268,7 +261,7 @@ namespace Flow.Launcher.Plugin.TwoFactorAuthenticator
 
         public Task ReloadDataAsync()
         {
-            return Task.Run(() => { LoadPinyinResult(); });
+            return Task.Run(() => { PinYin.LoadPinyinResult(_settings, _context); });
         }
 
 

@@ -5,7 +5,7 @@
                     xmlns:system="clr-namespace:System;assembly=mscorlib">
 
     <system:String x:Key="two_fa_plugin_title">Two Factor Authenticator Plugin</system:String>
-    <system:String x:Key="two_fa_plugin_description">Quickly generate a two factor authentication code</system:String>
+    <system:String x:Key="two_fa_plugin_description">Quickly generate a two factor authentication TOTP code</system:String>
 
     <system:String x:Key="two_fa_generate_share_qr_code">Generate Share QR Code</system:String>
     <system:String x:Key="two_fa_generate_share_string">Copy Share String</system:String>

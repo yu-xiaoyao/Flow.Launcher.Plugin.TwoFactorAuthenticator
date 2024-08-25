@@ -183,6 +183,7 @@ namespace Flow.Launcher.Plugin.TwoFactorAuthenticator
         private void Save_Settings(object sender, RoutedEventArgs e)
         {
             _context.API.SavePluginSettings();
+            PinYin.LoadPinyinResult(_settings, _context);
         }
 
 

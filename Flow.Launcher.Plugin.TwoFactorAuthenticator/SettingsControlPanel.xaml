@@ -41,7 +41,7 @@
             <Button Margin="4" Click="ImportClipboard_Click">Import From Clipboard URL</Button>
             <Button Margin="4" MinWidth="100" Click="Otp_Import_Json">Import All</Button>
             <Button Margin="4" MinWidth="100" Click="Otp_Export_Json">Export All</Button>
-            <Button Margin="4" MinWidth="100" Click="Save_Settings">Save All Settings</Button>
+            <Button Margin="4" MinWidth="100" Click="Save_Settings">Save And Reload Settings</Button>
         </StackPanel>
 
         <StackPanel Margin="10 0 10 10" Height="180">

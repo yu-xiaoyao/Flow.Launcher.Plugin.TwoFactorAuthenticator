@@ -5,8 +5,53 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Flow.Launcher.Plugin.TwoFactorAuthenticator"
         mc:Ignorable="d"
+        Background="{DynamicResource PopuBGColor}"
+        Foreground="{DynamicResource PopupTextColor}"
         Title="TotpAddWindows" Width="660" Height="540">
+
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="32"
+                      ResizeBorderThickness="{x:Static SystemParameters.WindowResizeBorderThickness}" />
+    </WindowChrome.WindowChrome>
+
     <StackPanel>
+
+        <!-- Custom Title Bar -->
+        <StackPanel>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Button
+                    Grid.Column="4"
+                    Click="OnCancelButtonClick"
+                    Style="{StaticResource TitleBarCloseButtonStyle}">
+                    <Path
+                        Width="46"
+                        Height="32"
+                        Data="M 18,11 27,20 M 18,20 27,11"
+                        Stroke="{Binding Path=Foreground, RelativeSource={RelativeSource AncestorType={x:Type Button}}}"
+                        StrokeThickness="1">
+                        <Path.Style>
+                            <Style TargetType="Path">
+                                <Style.Triggers>
+                                    <DataTrigger
+                                        Binding="{Binding Path=IsActive, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}"
+                                        Value="False">
+                                        <Setter Property="Opacity" Value="0.5" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Path.Style>
+                    </Path>
+                </Button>
+            </Grid>
+        </StackPanel>
+
 
         <StackPanel Orientation="Horizontal" Margin="10" HorizontalAlignment="Left">
             <Button Width="220" Margin="5 0 0 0" Name="ImportQrCodeBtn" Click="ImportQrCodeFile_Click">Import From QRCode File</Button>

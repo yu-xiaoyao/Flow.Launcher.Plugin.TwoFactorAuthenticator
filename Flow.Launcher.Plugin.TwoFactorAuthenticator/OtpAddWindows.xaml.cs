@@ -289,4 +289,10 @@ public partial class OtpAddWindows : Window
     {
         Close();
     }
+
+
+    private void OnCancelButtonClick(object sender, RoutedEventArgs e)
+    {
+        Close();
+    }
 }
